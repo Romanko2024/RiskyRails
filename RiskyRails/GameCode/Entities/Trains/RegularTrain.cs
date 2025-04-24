@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Collections.Specialized.BitVector32;
-
+using RiskyRails.GameCode.Entities;
 namespace RiskyRails.GameCode.Entities.Trains
 {
     /// <summary>

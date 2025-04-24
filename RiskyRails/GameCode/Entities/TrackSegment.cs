@@ -39,5 +39,9 @@ namespace RiskyRails.GameCode.Entities
                 segment.ConnectedSegments.Add(this);
             }
         }
+        public void SetDamaged(bool isDamaged)
+        {
+            IsDamaged = isDamaged;
+        }
     }
 }
