@@ -7,22 +7,37 @@ using System.Threading.Tasks;
 
 namespace RiskyRails.GameCode.Entities
 {
+    /// <summary>
+    /// Базовий клас для всіх типів поїздів
+    /// </summary>
     public abstract class Train
     {
-        public Vector2 Position { get; protected set; }
-        public TrackSegment CurrentTrack { get; set; } //!!
-        public bool IsActive { get; protected set; } = true;
+        // властивості
+        public Vector2 GridPosition { get; protected set; }  // позиція на грід-сітці
+        public TrackSegment CurrentTrack { get; set; }       // поточний сегмент колії
+        public float Speed { get; protected set; } = 0.5f;   // швидкість руху (тайлів/секунду)
+        public bool IsActive { get; protected set; } = true; // чи активний поїзд
+        public Queue<TrackSegment> Path { get; } = new();    // шлях руху
 
-        public abstract void Update(GameTime gameTime);
+        // абстрактні методи
+        public abstract void Update(GameTime gameTime);      // оновлення стану
+        public abstract void HandleSignal(Signal signal);    // реакція на сигнал
 
-        public virtual void HandleSignal(Signal signal) //!!
-        {
-            //базова логіка реакції на сигнал
-        }
-
+        // віртуальні методи
         public virtual void HandleCollision()
         {
+            // стандартна реакція на зіткнення
             IsActive = false;
+            CurrentTrack?.MarkAsDamaged();
+        }
+
+        protected virtual void MoveToNextTrack()
+        {
+            if (Path.Count > 0)
+            {
+                CurrentTrack = Path.Dequeue();
+                GridPosition = CurrentTrack.GridPosition;
+            }
         }
     }
 }
