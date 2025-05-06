@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using RiskyRails.GameCode.Entities;
 using RiskyRails.GameCode.Entities.Trains;
 using RiskyRails.GameCode.Managers;
+using RiskyRails.GameCode.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,8 @@ namespace RiskyRails
         private RailwayManager _railwayManager;
         private CollisionManager _collisionManager;
         private List<Train> _activeTrains = new();
+        private IsometricCamera _camera;
+        private Texture2D _tileTexture;
 
         public Game1()
         {
@@ -30,6 +33,7 @@ namespace RiskyRails
         {
             // TODO: Add your initialization logic here
 
+            _camera = new IsometricCamera(GraphicsDevice.Viewport);
             _railwayManager = new RailwayManager();
             _railwayManager.GenerateTestMap();
 
@@ -40,6 +44,7 @@ namespace RiskyRails
 
         protected override void LoadContent()
         {
+            _tileTexture = Content.Load<Texture2D>("tile");
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
@@ -67,6 +72,21 @@ namespace RiskyRails
                     Destination = _railwayManager.Stations[1]
                 });
             }
+
+            //рух камери стрілками
+            var keyboardState = Keyboard.GetState();
+            var moveSpeed = 5.0f;
+
+            if (keyboardState.IsKeyDown(Keys.Left))
+                _camera.Position.X += moveSpeed;
+            if (keyboardState.IsKeyDown(Keys.Right))
+                _camera.Position.X -= moveSpeed;
+            if (keyboardState.IsKeyDown(Keys.Up))
+                _camera.Position.Y += moveSpeed;
+            if (keyboardState.IsKeyDown(Keys.Down))
+                _camera.Position.Y -= moveSpeed;
+
+            _camera.Update();
 
             base.Update(gameTime);
 
