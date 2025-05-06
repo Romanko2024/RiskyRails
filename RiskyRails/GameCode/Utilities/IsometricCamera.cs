@@ -11,7 +11,12 @@ namespace RiskyRails.GameCode.Utilities
     public class IsometricCamera
     {
         private readonly Viewport _viewport;
-        public Vector2 Position { get; set; }
+        private Vector2 _position;
+        public Vector2 Position
+        {
+            get => _position;
+            set => _position = value;
+        }
         public float Zoom { get; set; } = 1.0f;
         public Matrix TransformMatrix { get; private set; }
 

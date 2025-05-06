@@ -76,17 +76,34 @@ namespace RiskyRails
             //рух камери стрілками
             var keyboardState = Keyboard.GetState();
             var moveSpeed = 5.0f;
+            var newPosition = _camera.Position;
 
             if (keyboardState.IsKeyDown(Keys.Left))
-                _camera.Position.X += moveSpeed;
+                newPosition.X += moveSpeed;
             if (keyboardState.IsKeyDown(Keys.Right))
-                _camera.Position.X -= moveSpeed;
+                newPosition.X -= moveSpeed;
             if (keyboardState.IsKeyDown(Keys.Up))
-                _camera.Position.Y += moveSpeed;
+                newPosition.Y += moveSpeed;
             if (keyboardState.IsKeyDown(Keys.Down))
-                _camera.Position.Y -= moveSpeed;
+                newPosition.Y -= moveSpeed;
 
+            _camera.Position = newPosition;
             _camera.Update();
+
+            var mouseState = Mouse.GetState();
+            if (mouseState.LeftButton == ButtonState.Pressed)
+            {
+                var worldPos = _camera.ScreenToWorld(new Vector2(mouseState.X, mouseState.Y));
+                var gridPos = IsometricConverter.IsoToGrid(worldPos);
+                gridPos = new Vector2((int)gridPos.X, (int)gridPos.Y);
+
+                // Логіка спавну ремонтного поїзда
+                var track = _railwayManager.Tracks.FirstOrDefault(t => t.GridPosition == gridPos);
+                if (track is Station station)
+                {
+                    _activeTrains.Add(new RepairTrain { CurrentTrack = station });
+                }
+            }
 
             base.Update(gameTime);
 
@@ -101,8 +118,10 @@ namespace RiskyRails
 
             _spriteBatch.Begin(
                 transformMatrix: _camera.TransformMatrix,
-                sortMode: SpriteSortMode.FrontToBack
-            );
+                sortMode: SpriteSortMode.Texture,
+                blendState: BlendState.AlphaBlend,
+                samplerState: SamplerState.PointClamp
+                );
 
             // малювання колій
             foreach (var track in _railwayManager.Tracks)
