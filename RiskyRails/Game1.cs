@@ -99,22 +99,53 @@ namespace RiskyRails
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
+            _spriteBatch.Begin(
+                transformMatrix: _camera.TransformMatrix,
+                sortMode: SpriteSortMode.FrontToBack
+            );
 
-            //малювання колій
-            _spriteBatch.Begin();
+            // малювання колій
             foreach (var track in _railwayManager.Tracks)
             {
-                //ТИМЧАСОВИЙ ПРЯМОКУТНИК
-                var rect = new Rectangle(
-                    (int)track.GridPosition.X * 50,
-                    (int)track.GridPosition.Y * 50,
-                    50, 50);
+                var isoPos = IsometricConverter.GridToIso(track.GridPosition);
+                var origin = new Vector2(_tileTexture.Width / 2, _tileTexture.Height / 2);
 
                 _spriteBatch.Draw(
-                    Texture2D.FromFile(GraphicsDevice, "whitePixel.png"),
-                    rect,
-                    track.IsDamaged ? Color.Red : Color.Gray);
+                    _tileTexture,
+                    isoPos,
+                    null,
+                    track.IsDamaged ? Color.Red : Color.White,
+                    0f,
+                    origin,
+                    1f,
+                    SpriteEffects.None,
+                    isoPos.Y / 1000f
+                );
+            }
+
+            //малювання поїздів
+            foreach (var train in _activeTrains)
+            {
+                var isoPos = IsometricConverter.GridToIso(train.GridPosition);
+                var trainColor = train switch
+                {
+                    RegularTrain => Color.Blue,
+                    DrunkenTrain => Color.Red,
+                    RepairTrain => Color.Green,
+                    _ => Color.White
+                };
+
+                _spriteBatch.Draw(
+                    _tileTexture,
+                    isoPos,
+                    null,
+                    trainColor,
+                    0f,
+                    new Vector2(_tileTexture.Width / 2, _tileTexture.Height / 2),
+                    0.7f, //масштаб поїзда
+                    SpriteEffects.None,
+                    isoPos.Y / 1000f + 0.1f //поїзди поверх колій
+                );
             }
             _spriteBatch.End();
 
