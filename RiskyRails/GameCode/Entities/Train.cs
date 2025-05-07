@@ -17,7 +17,7 @@ namespace RiskyRails.GameCode.Entities
         public TrackSegment CurrentTrack { get; set; }       // поточний сегмент колії
         public float Speed { get; protected set; } = 0.5f;   // швидкість руху (тайлів/секунду)
         public bool IsActive { get; protected set; } = true; // чи активний поїзд
-        public Queue<TrackSegment> Path { get; } = new();    // шлях руху
+        public Queue<TrackSegment> Path { get; set; } = new();    // шлях руху
 
         // абстрактні методи
         public abstract void Update(GameTime gameTime);      // оновлення стану

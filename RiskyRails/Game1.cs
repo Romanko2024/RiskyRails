@@ -66,10 +66,17 @@ namespace RiskyRails
             if (new Random().Next(100) < 5)
             {
                 var station = _railwayManager.Stations[0];
+                var destination = _railwayManager.Stations[1];
+
+                //створення шляху між станціями
+                var path = new Queue<TrackSegment>();
+                path.Enqueue(station.ConnectedSegments.First());
+
                 _activeTrains.Add(new RegularTrain
                 {
                     CurrentTrack = station,
-                    Destination = _railwayManager.Stations[1]
+                    Destination = destination,
+                    Path = path //+ініціалізація шляху
                 });
             }
 

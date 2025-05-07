@@ -39,12 +39,21 @@ namespace RiskyRails.GameCode.Entities.Trains
                 }
             }
 
-            // інтерполяція позиції
-            GridPosition = Vector2.Lerp(
-                CurrentTrack.GridPosition,
-                Path.Peek().GridPosition,
-                _progress
-            );
+            //перевірка наявності елементів у черзі
+            if (Path.Count > 0)
+            {
+                // інтерполяція позиції
+                GridPosition = Vector2.Lerp(
+                    CurrentTrack.GridPosition,
+                    Path.Peek().GridPosition,
+                    _progress
+                );
+            }
+            else
+            {
+                //якщо шлях порожній - зупинити потяг
+                IsActive = false;
+            }
         }
 
         public override void HandleSignal(Signal signal)
@@ -54,6 +63,7 @@ namespace RiskyRails.GameCode.Entities.Trains
             //зупинка на червоний сигнал
             Speed = 0;
             Path.Clear();
+            IsActive = false;
         }
     }
 }
