@@ -18,7 +18,10 @@ namespace RiskyRails.GameCode.Managers
             //створення станцій
             var station1 = new Station { GridPosition = new Vector2(2, 2), Name = "Central Station" };
             var station2 = new Station { GridPosition = new Vector2(8, 8), Name = "East Station" };
-
+            Tracks.Add(station1); //додаємо станції до Tracks
+            Tracks.Add(station2);
+            Stations.Add(station1); //і до окремої колкц станцій
+            Stations.Add(station2);
             //з'єднання станцій
             ConnectTracks(station1, station2);
 

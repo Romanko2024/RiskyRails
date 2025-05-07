@@ -31,8 +31,6 @@ namespace RiskyRails
 
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
-
             _camera = new IsometricCamera(GraphicsDevice.Viewport);
             _railwayManager = new RailwayManager();
             _railwayManager.GenerateTestMap();
@@ -46,8 +44,6 @@ namespace RiskyRails
         {
             _tileTexture = Content.Load<Texture2D>("tile");
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
         }
 
         protected override void Update(GameTime gameTime)
@@ -63,21 +59,30 @@ namespace RiskyRails
             _collisionManager.CheckCollisions(_activeTrains);
 
             //спавн нових потягів
-            if (new Random().Next(100) < 5)
+            if (new Random().Next(100) < 5 && _railwayManager.Stations.Count >= 2)
             {
                 var station = _railwayManager.Stations[0];
                 var destination = _railwayManager.Stations[1];
 
                 //створення шляху між станціями
                 var path = new Queue<TrackSegment>();
-                path.Enqueue(station.ConnectedSegments.First());
-
-                _activeTrains.Add(new RegularTrain
+                TrackSegment current = station; //ЯВНО ВКАЗУЄ TrackSegment
+                while (current != destination && current.ConnectedSegments.Any())
                 {
-                    CurrentTrack = station,
-                    Destination = destination,
-                    Path = path //+ініціалізація шляху
-                });
+                    var next = current.ConnectedSegments.First();
+                    path.Enqueue(next);
+                    current = next;
+                }
+
+                if (path.Count > 0)
+                {
+                    _activeTrains.Add(new RegularTrain
+                    {
+                        CurrentTrack = station,
+                        Destination = destination,
+                        Path = path //+ініціалізація шляху
+                    });
+                }
             }
 
             //рух камери стрілками
@@ -97,6 +102,7 @@ namespace RiskyRails
             _camera.Position = newPosition;
             _camera.Update();
 
+            //обробка кліків миші для спавну RepairTrain
             var mouseState = Mouse.GetState();
             if (mouseState.LeftButton == ButtonState.Pressed)
             {
@@ -106,15 +112,13 @@ namespace RiskyRails
 
                 // Логіка спавну ремонтного поїзда
                 var track = _railwayManager.Tracks.FirstOrDefault(t => t.GridPosition == gridPos);
+
+                //явна перевірка типу через is
                 if (track is Station station)
                 {
                     _activeTrains.Add(new RepairTrain { CurrentTrack = station });
                 }
             }
-
-            base.Update(gameTime);
-
-            // TODO: Add your update logic here
 
             base.Update(gameTime);
         }
@@ -125,16 +129,17 @@ namespace RiskyRails
 
             _spriteBatch.Begin(
                 transformMatrix: _camera.TransformMatrix,
-                sortMode: SpriteSortMode.Texture,
+                sortMode: SpriteSortMode.FrontToBack,
                 blendState: BlendState.AlphaBlend,
                 samplerState: SamplerState.PointClamp
-                );
+            );
 
             // малювання колій
             foreach (var track in _railwayManager.Tracks)
             {
                 var isoPos = IsometricConverter.GridToIso(track.GridPosition);
                 var origin = new Vector2(_tileTexture.Width / 2, _tileTexture.Height / 2);
+                float depth = IsometricConverter.CalculateDepth(track.GridPosition);
 
                 _spriteBatch.Draw(
                     _tileTexture,
@@ -145,7 +150,7 @@ namespace RiskyRails
                     origin,
                     1f,
                     SpriteEffects.None,
-                    isoPos.Y / 1000f
+                    depth
                 );
             }
 
@@ -153,7 +158,10 @@ namespace RiskyRails
             foreach (var train in _activeTrains)
             {
                 var isoPos = IsometricConverter.GridToIso(train.GridPosition);
-                var trainColor = train switch
+                var origin = new Vector2(_tileTexture.Width / 2, _tileTexture.Height / 2);
+                float trainDepth = IsometricConverter.CalculateDepth(train.GridPosition) + 0.0001f;
+
+                Color trainColor = train switch
                 {
                     RegularTrain => Color.Blue,
                     DrunkenTrain => Color.Red,
@@ -167,10 +175,10 @@ namespace RiskyRails
                     null,
                     trainColor,
                     0f,
-                    new Vector2(_tileTexture.Width / 2, _tileTexture.Height / 2),
+                    origin,
                     0.7f, //масштаб поїзда
                     SpriteEffects.None,
-                    isoPos.Y / 1000f + 0.1f //поїзди поверх колій
+                    trainDepth
                 );
             }
             _spriteBatch.End();

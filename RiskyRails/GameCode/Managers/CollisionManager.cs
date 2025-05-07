@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using RiskyRails.GameCode.Entities;
+using RiskyRails.GameCode.Entities.Trains;
 
 namespace RiskyRails.GameCode.Managers
 {
@@ -12,6 +13,7 @@ namespace RiskyRails.GameCode.Managers
         public void CheckCollisions(List<Train> trains)
         {
             var collisions = trains
+                .Where(t => !(t is RepairTrain)) //ігнор ремонтних
                 .GroupBy(t => t.CurrentTrack)
                 .Where(g => g.Count() > 1);
 

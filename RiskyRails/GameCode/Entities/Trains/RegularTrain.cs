@@ -15,6 +15,7 @@ namespace RiskyRails.GameCode.Entities.Trains
     {
         public Station Destination { get; set; }
         private float _progress; // прогрес руху між сегментами (0-1)
+        private TrackSegment _previousTrack;
 
         public RegularTrain()
         {
@@ -23,36 +24,26 @@ namespace RiskyRails.GameCode.Entities.Trains
 
         public override void Update(GameTime gameTime)
         {
-            if (!CurrentTrack.CanPassThrough(this)) return;
+            if (!CurrentTrack.CanPassThrough(this) || Path.Count == 0)
+            {
+                IsActive = false;
+                return;
+            }
 
+            var targetTrack = Path.Peek();
             _progress += Speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            // інтерполяція позиції
+            GridPosition = Vector2.Lerp(
+                CurrentTrack.GridPosition,
+                targetTrack.GridPosition,
+                _progress
+            );
 
             if (_progress >= 1.0f)
             {
-                MoveToNextTrack();
+                CurrentTrack = Path.Dequeue();
                 _progress = 0;
-
-                if (CurrentTrack == Destination)
-                {
-                    IsActive = false;
-                    return;
-                }
-            }
-
-            //перевірка наявності елементів у черзі
-            if (Path.Count > 0)
-            {
-                // інтерполяція позиції
-                GridPosition = Vector2.Lerp(
-                    CurrentTrack.GridPosition,
-                    Path.Peek().GridPosition,
-                    _progress
-                );
-            }
-            else
-            {
-                //якщо шлях порожній - зупинити потяг
-                IsActive = false;
+                if (CurrentTrack == Destination) IsActive = false;
             }
         }
 
