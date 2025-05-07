@@ -61,19 +61,11 @@ namespace RiskyRails
             //спавн нових потягів
             if (new Random().Next(10000) < 100 && _railwayManager.Stations.Count >= 2)
             {
-                var station = _railwayManager.Stations[0];
-                var destination = _railwayManager.Stations[1];
+                var station = _railwayManager.Stations[0] as Station;
+                var destination = _railwayManager.Stations[1] as Station;
 
                 //створення шляху між станціями
-                var path = new Queue<TrackSegment>();
-                TrackSegment current = station; //ЯВНО ВКАЗУЄ TrackSegment
-                while (current != destination && current.ConnectedSegments.Any())
-                {
-                    var next = current.ConnectedSegments.First();
-                    path.Enqueue(next);
-                    current = next;
-                }
-
+                var path = _railwayManager.FindPath(station, destination);
                 if (path.Count > 0)
                 {
                     _activeTrains.Add(new RegularTrain
@@ -91,13 +83,13 @@ namespace RiskyRails
             var newPosition = _camera.Position;
 
             if (keyboardState.IsKeyDown(Keys.Left))
-                newPosition.X += moveSpeed;
-            if (keyboardState.IsKeyDown(Keys.Right))
                 newPosition.X -= moveSpeed;
+            if (keyboardState.IsKeyDown(Keys.Right))
+                newPosition.X += moveSpeed;
             if (keyboardState.IsKeyDown(Keys.Up))
-                newPosition.Y += moveSpeed;
-            if (keyboardState.IsKeyDown(Keys.Down))
                 newPosition.Y -= moveSpeed;
+            if (keyboardState.IsKeyDown(Keys.Down))
+                newPosition.Y += moveSpeed;
 
             _camera.Position = newPosition;
             _camera.Update();

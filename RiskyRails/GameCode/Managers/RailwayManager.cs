@@ -24,15 +24,50 @@ namespace RiskyRails.GameCode.Managers
             Stations.Add(station2);
             //з'єднання станцій
             ConnectTracks(station1, station2);
-
-            Tracks.AddRange(new[] { station1, station2 });
-            Stations.AddRange(new[] { station1, station2 });
         }
 
         private void ConnectTracks(TrackSegment a, TrackSegment b)
         {
             a.ConnectedSegments.Add(b);
             b.ConnectedSegments.Add(a);
+        }
+        public Queue<TrackSegment> FindPath(Station start, Station end)
+        {
+            var queue = new Queue<TrackSegment>();
+            var visited = new HashSet<TrackSegment>();
+            var parent = new Dictionary<TrackSegment, TrackSegment>();
+
+            queue.Enqueue(start);
+            visited.Add(start);
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                if (current == end) break;
+
+                foreach (var neighbor in current.ConnectedSegments)
+                {
+                    if (!visited.Contains(neighbor) && !neighbor.IsDamaged)
+                    {
+                        visited.Add(neighbor);
+                        parent[neighbor] = current;
+                        queue.Enqueue(neighbor);
+                    }
+                }
+            }
+
+            //відновлення шляху
+            var path = new Stack<TrackSegment>();
+            var node = end;
+            while (node != null && node != start)
+            {
+                path.Push(node);
+                node = parent.ContainsKey(node) ? parent[node] : null;
+            }
+
+            var result = new Queue<TrackSegment>();
+            while (path.Count > 0) result.Enqueue(path.Pop());
+            return result;
         }
     }
 }
