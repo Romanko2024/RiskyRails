@@ -58,7 +58,7 @@ namespace RiskyRails.GameCode.Managers
 
             //відновлення шляху
             var path = new Stack<TrackSegment>();
-            var node = end;
+            TrackSegment node = end; //змінено з 'var' на явний тип
             while (node != null && node != start)
             {
                 path.Push(node);
