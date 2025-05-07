@@ -59,7 +59,7 @@ namespace RiskyRails
             _collisionManager.CheckCollisions(_activeTrains);
 
             //спавн нових потягів
-            if (new Random().Next(100) < 5 && _railwayManager.Stations.Count >= 2)
+            if (new Random().Next(10000) < 100 && _railwayManager.Stations.Count >= 2)
             {
                 var station = _railwayManager.Stations[0];
                 var destination = _railwayManager.Stations[1];

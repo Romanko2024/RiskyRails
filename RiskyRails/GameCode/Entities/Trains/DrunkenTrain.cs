@@ -13,7 +13,7 @@ namespace RiskyRails.GameCode.Entities.Trains
     public class DrunkenTrain : Train
     {
         private Vector2 _direction;
-
+        private static readonly Random _random = new Random();
         public DrunkenTrain()
         {
             Speed = 0.7f;
@@ -33,8 +33,8 @@ namespace RiskyRails.GameCode.Entities.Trains
             if (new Random().NextDouble() < 0.1)
             {
                 _direction = new Vector2(
-                    (float)(new Random().NextDouble() - 0.5),
-                    (float)(new Random().NextDouble() - 0.5)
+                    (float)(_random.NextDouble() - 0.5),
+                    (float)(_random.NextDouble() - 0.5)
                 );
                 _direction.Normalize();
             }

@@ -36,7 +36,10 @@ namespace RiskyRails.GameCode.Entities.Trains
         {
             if (IsRepairing) return;
 
-            base.MoveToNextTrack();
+            if (Path.Count > 0)
+            {
+                base.MoveToNextTrack();
+            }
 
             if (CurrentTrack.IsDamaged)
             {

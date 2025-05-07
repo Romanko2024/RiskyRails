@@ -15,7 +15,7 @@ namespace RiskyRails.GameCode.Entities.Trains
     {
         public Station Destination { get; set; }
         private float _progress; // прогрес руху між сегментами (0-1)
-        private TrackSegment _previousTrack;
+
 
         public RegularTrain()
         {

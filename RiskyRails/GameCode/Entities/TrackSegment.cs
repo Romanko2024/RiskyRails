@@ -28,6 +28,7 @@ namespace RiskyRails.GameCode.Entities
 
         public void MarkAsDamaged()
         {
+            if (this is Station) return;
             IsDamaged = true;
             Signal = null; // світлофор знищується при пошкодженні
         }

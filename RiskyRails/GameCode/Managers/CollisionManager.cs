@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using RiskyRails.GameCode.Entities;
 using RiskyRails.GameCode.Entities.Trains;
+using Microsoft.Xna.Framework;
 
 namespace RiskyRails.GameCode.Managers
 {
@@ -12,18 +13,21 @@ namespace RiskyRails.GameCode.Managers
     {
         public void CheckCollisions(List<Train> trains)
         {
-            var collisions = trains
-                .Where(t => !(t is RepairTrain)) //ігнор ремонтних
-                .GroupBy(t => t.CurrentTrack)
-                .Where(g => g.Count() > 1);
-
-            foreach (var group in collisions)
+            foreach (var train1 in trains)
             {
-                foreach (var train in group)
+                foreach (var train2 in trains)
                 {
-                    train.HandleCollision();
+                    if (train1 == train2 || train1 is RepairTrain || train2 is RepairTrain)
+                        continue;
+
+                    var distance = Vector2.Distance(train1.GridPosition, train2.GridPosition);
+                    if (distance < 0.3f) //якщо поїзди дуже близько
+                    {
+                        train1.HandleCollision();
+                        train2.HandleCollision();
+                        train1.CurrentTrack?.MarkAsDamaged();
+                    }
                 }
-                group.Key.SetDamaged(true);
             }
         }
     }
