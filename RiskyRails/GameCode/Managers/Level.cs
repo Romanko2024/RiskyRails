@@ -23,30 +23,66 @@ namespace RiskyRails.GameCode.Managers
 
             //станції
             var station1 = new Station { GridPosition = new Vector2(2, 2), Name = "North Station" };
-            var station2 = new Station { GridPosition = new Vector2(8, 2), Name = "East Station" };
-            var station3 = new Station { GridPosition = new Vector2(8, 8), Name = "South Station" };
-            var station4 = new Station { GridPosition = new Vector2(2, 8), Name = "West Station" };
+            var station2 = new Station { GridPosition = new Vector2(14, 2), Name = "East Station" };
+            var station3 = new Station { GridPosition = new Vector2(14, 14), Name = "South Station" };
+            var station4 = new Station { GridPosition = new Vector2(2, 14), Name = "West Station" };
             AddStation(station1);
             AddStation(station2);
             AddStation(station3);
             AddStation(station4);
 
-            //основні колії
-            CreateStraightTrack(station1, new Vector2(3, 2), station2);
-            CreateCurvedTrack(station2, new Vector2(8, 3), station3);
-            CreateStraightTrack(station3, new Vector2(7, 8), station4);
-            CreateCurvedTrack(station4, new Vector2(2, 7), station1);
+            //має (напевно) прокладати повноцінні шляхи
+            CreateRailLine(station1, station2, Direction.East);
+            CreateRailLine(station2, station3, Direction.South);
+            CreateRailLine(station3, station4, Direction.West);
+            CreateRailLine(station4, station1, Direction.North);
+        }
 
-            //стрілка
-            var switchTrack = new TrackSegment
+        private enum Direction { North, East, South, West }
+
+        private void CreateRailLine(Station start, Station end, Direction dir)
+        {
+            var currentPos = start.GridPosition;
+            var step = Vector2.Zero;
+
+            //крок руху
+            switch (dir)
             {
-                GridPosition = new Vector2(5, 5),
-                IsSwitch = true
-            };
-            AddTrack(switchTrack);
+                case Direction.East: step = new Vector2(1, 0); break;
+                case Direction.West: step = new Vector2(-1, 0); break;
+                case Direction.North: step = new Vector2(0, -1); break;
+                case Direction.South: step = new Vector2(0, 1); break;
+            }
 
-            //стрілку до шляху
-            ConnectTracks(Tracks[4], switchTrack);
+            //генерація проміжних сегментів
+            while (currentPos != end.GridPosition)
+            {
+                currentPos += step;
+
+                //пропуск старт станції
+                if (currentPos == start.GridPosition) continue;
+
+                var segment = new TrackSegment { GridPosition = currentPos };
+
+                //додаємо світлофор кожні 3 тайли
+                if ((currentPos.X + currentPos.Y) % 3 == 0)
+                {
+                    segment.Signal = new Signal();
+                    Signals.Add(segment.Signal);
+                }
+
+                AddTrack(segment);
+                ConnectToPrevious(segment);
+            }
+
+            //з'єднання кінцевої станції
+            ConnectTracks(Tracks.Last(), end);
+        }
+
+        private void ConnectToPrevious(TrackSegment segment)
+        {
+            var prev = Tracks.LastOrDefault();
+            if (prev != null) ConnectTracks(prev, segment);
         }
 
         private void CreateStraightTrack(Station start, Vector2 middlePos, Station end)

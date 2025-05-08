@@ -147,8 +147,21 @@ namespace RiskyRails
             foreach (var track in _railwayManager.CurrentLevel.Tracks)
             {
                 Texture2D texture = _tileTexture;
-                if (track.IsSwitch) texture = _tileSwitch;
-                else if (track.Signal != null) texture = _tileSignal;
+                Color tint = Color.White;
+
+                if (track.IsDamaged)
+                {
+                    tint = Color.Red;
+                }
+                else if (track.Signal != null)
+                {
+                    texture = _tileSignal;
+                    tint = track.Signal.IsGreen ? Color.Lime : Color.Red;
+                }
+                else if (track.IsSwitch)
+                {
+                    texture = _tileSwitch;
+                }
 
                 var isoPos = IsometricConverter.GridToIso(track.GridPosition);
                 var origin = new Vector2(texture.Width / 2, texture.Height / 2);
@@ -158,7 +171,7 @@ namespace RiskyRails
                     texture,
                     isoPos,
                     null,
-                    track.IsDamaged ? Color.Red : Color.White,
+                    tint,
                     0f,
                     origin,
                     1f,
