@@ -20,7 +20,11 @@ namespace RiskyRails
         private CollisionManager _collisionManager;
         private List<Train> _activeTrains = new();
         private IsometricCamera _camera;
+
+        //текстури
         private Texture2D _tileTexture;
+        private Texture2D _tileSwitch;
+        private Texture2D _tileSignal;
 
         public Game1()
         {
@@ -33,7 +37,7 @@ namespace RiskyRails
         {
             _camera = new IsometricCamera(GraphicsDevice.Viewport);
             _railwayManager = new RailwayManager();
-            _railwayManager.GenerateTestMap();
+            _railwayManager.Initialize();
 
             _collisionManager = new CollisionManager();
 
@@ -42,7 +46,11 @@ namespace RiskyRails
 
         protected override void LoadContent()
         {
-            _tileTexture = Content.Load<Texture2D>("tile");
+            //завантаження текстур
+            _tileTexture = Content.Load<Texture2D>("tile_rail");
+            _tileSwitch = Content.Load<Texture2D>("tile_switch");
+            _tileSignal = Content.Load<Texture2D>("tile_signal");
+
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
 
@@ -59,20 +67,21 @@ namespace RiskyRails
             _collisionManager.CheckCollisions(_activeTrains);
 
             //спавн нових потягів
-            if (new Random().Next(10000) < 100 && _railwayManager.Stations.Count >= 2)
+            if (new Random().Next(10000) < 100 && _railwayManager.CurrentLevel.Stations.Count >= 2)
             {
-                var station = _railwayManager.Stations[0] as Station;
-                var destination = _railwayManager.Stations[1] as Station;
+                var stations = _railwayManager.CurrentLevel.Stations;
+                var startStation = stations[new Random().Next(stations.Count)];
+                var endStation = stations.FirstOrDefault(s => s != startStation);
 
                 //створення шляху між станціями
-                var path = _railwayManager.FindPath(station, destination);
-                if (path.Count > 0)
+                var path = _railwayManager.FindPath(startStation, endStation);
+                if (path != null && path.Count > 0)
                 {
                     _activeTrains.Add(new RegularTrain
                     {
-                        CurrentTrack = station,
-                        Destination = destination,
-                        Path = path //+ініціалізація шляху
+                        CurrentTrack = startStation,
+                        Destination = endStation,
+                        Path = new Queue<TrackSegment>(path)
                     });
                 }
             }
@@ -82,19 +91,28 @@ namespace RiskyRails
             var moveSpeed = 5.0f;
             var newPosition = _camera.Position;
 
-            if (keyboardState.IsKeyDown(Keys.Left))
-                newPosition.X -= moveSpeed;
-            if (keyboardState.IsKeyDown(Keys.Right))
-                newPosition.X += moveSpeed;
-            if (keyboardState.IsKeyDown(Keys.Up))
-                newPosition.Y -= moveSpeed;
-            if (keyboardState.IsKeyDown(Keys.Down))
-                newPosition.Y += moveSpeed;
+            if (keyboardState.IsKeyDown(Keys.Left)) newPosition.X -= moveSpeed;
+            if (keyboardState.IsKeyDown(Keys.Right)) newPosition.X += moveSpeed;
+            if (keyboardState.IsKeyDown(Keys.Up)) newPosition.Y -= moveSpeed;
+            if (keyboardState.IsKeyDown(Keys.Down)) newPosition.Y += moveSpeed;
+
+            //перемикання рівнів
+            if (keyboardState.IsKeyDown(Keys.D1)) _railwayManager.LoadLevel(0);
+            if (keyboardState.IsKeyDown(Keys.D2)) _railwayManager.LoadLevel(1);
 
             _camera.Position = newPosition;
             _camera.Update();
 
-            //обробка кліків миші для спавну RepairTrain
+            //періодична зміна сигналів
+            if (new Random().Next(100) < 5)
+            {
+                foreach (var signal in _railwayManager.CurrentLevel.Signals)
+                {
+                    signal.IsGreen = !signal.IsGreen;
+                }
+            }
+
+            // спавн ремонтних потягів
             var mouseState = Mouse.GetState();
             if (mouseState.LeftButton == ButtonState.Pressed)
             {
@@ -103,8 +121,7 @@ namespace RiskyRails
                 gridPos = new Vector2((int)gridPos.X, (int)gridPos.Y);
 
                 // Логіка спавну ремонтного поїзда
-                var track = _railwayManager.Tracks.FirstOrDefault(t => t.GridPosition == gridPos);
-
+                var track = _railwayManager.CurrentLevel.Tracks.FirstOrDefault(t => t.GridPosition == gridPos);
                 //явна перевірка типу через is
                 if (track is Station station)
                 {
@@ -127,14 +144,18 @@ namespace RiskyRails
             );
 
             // малювання колій
-            foreach (var track in _railwayManager.Tracks)
+            foreach (var track in _railwayManager.CurrentLevel.Tracks)
             {
+                Texture2D texture = _tileTexture;
+                if (track.IsSwitch) texture = _tileSwitch;
+                else if (track.Signal != null) texture = _tileSignal;
+
                 var isoPos = IsometricConverter.GridToIso(track.GridPosition);
-                var origin = new Vector2(_tileTexture.Width / 2, _tileTexture.Height / 2);
+                var origin = new Vector2(texture.Width / 2, texture.Height / 2);
                 float depth = IsometricConverter.CalculateDepth(track.GridPosition);
 
                 _spriteBatch.Draw(
-                    _tileTexture,
+                    texture,
                     isoPos,
                     null,
                     track.IsDamaged ? Color.Red : Color.White,

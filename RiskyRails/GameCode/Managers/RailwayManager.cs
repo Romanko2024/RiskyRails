@@ -10,27 +10,28 @@ namespace RiskyRails.GameCode.Managers
 {
     public class RailwayManager
     {
-        public List<TrackSegment> Tracks { get; } = new();
-        public List<Station> Stations { get; } = new();
+        public List<Level> Levels { get; } = new();
+        public Level CurrentLevel { get; private set; }
 
-        public void GenerateTestMap()
+        public void Initialize()
         {
-            //створення станцій
-            var station1 = new Station { GridPosition = new Vector2(2, 2), Name = "Central Station" };
-            var station2 = new Station { GridPosition = new Vector2(8, 2), Name = "East Station" };
-            Tracks.Add(station1); //додаємо станції до Tracks
-            Tracks.Add(station2);
-            Stations.Add(station1); //і до окремої колкц станцій
-            Stations.Add(station2);
-            //з'єднання станцій
-            ConnectTracks(station1, station2);
+            //створення рівнів
+            var level1 = new Level();
+            level1.GenerateLevel1();
+            Levels.Add(level1);
+
+            //завантаження першого рівня за замовчуванням
+            LoadLevel(0);
         }
 
-        private void ConnectTracks(TrackSegment a, TrackSegment b)
+        public void LoadLevel(int levelIndex)
         {
-            a.ConnectedSegments.Add(b);
-            b.ConnectedSegments.Add(a);
+            if (levelIndex >= 0 && levelIndex < Levels.Count)
+            {
+                CurrentLevel = Levels[levelIndex];
+            }
         }
+
         public Queue<TrackSegment> FindPath(Station start, Station end)
         {
             var queue = new Queue<TrackSegment>();
@@ -69,5 +70,6 @@ namespace RiskyRails.GameCode.Managers
             while (path.Count > 0) result.Enqueue(path.Pop());
             return result;
         }
+        //ConnectTracks не потрібний тк логіка з'єднання в класі Level
     }
 }
