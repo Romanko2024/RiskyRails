@@ -14,6 +14,8 @@ namespace RiskyRails.GameCode.Managers
         public List<Station> Stations { get; } = new();
         public List<Signal> Signals { get; } = new();
 
+        private enum Direction { North, East, South, West }
+
         public void GenerateLevel1()
         {
             //очищаємо попередні дані
@@ -26,85 +28,74 @@ namespace RiskyRails.GameCode.Managers
             var station2 = new Station { GridPosition = new Vector2(14, 2), Name = "East Station" };
             var station3 = new Station { GridPosition = new Vector2(14, 14), Name = "South Station" };
             var station4 = new Station { GridPosition = new Vector2(2, 14), Name = "West Station" };
+
             AddStation(station1);
             AddStation(station2);
             AddStation(station3);
             AddStation(station4);
 
-            //має (напевно) прокладати повноцінні шляхи
-            CreateRailLine(station1, station2, Direction.East);
-            CreateRailLine(station2, station3, Direction.South);
-            CreateRailLine(station3, station4, Direction.West);
-            CreateRailLine(station4, station1, Direction.North);
+            //колії з поворотами
+            CreateRailLine(station1.GridPosition, new Vector2(13, 2), Direction.East, TrackSegment.TrackType.StraightX);
+            AddCurve(station2.GridPosition + new Vector2(0, 1), TrackSegment.TrackType.CurveSE);
+            CreateRailLine(new Vector2(14, 3), new Vector2(14, 13), Direction.South, TrackSegment.TrackType.StraightY);
+            AddCurve(station3.GridPosition + new Vector2(-1, 0), TrackSegment.TrackType.CurveSW);
+            CreateRailLine(new Vector2(13, 14), new Vector2(3, 14), Direction.West, TrackSegment.TrackType.StraightX);
+            AddCurve(station4.GridPosition + new Vector2(0, -1), TrackSegment.TrackType.CurveNW);
+            CreateRailLine(new Vector2(2, 13), new Vector2(2, 3), Direction.North, TrackSegment.TrackType.StraightY);
+            AddCurve(station1.GridPosition + new Vector2(1, 0), TrackSegment.TrackType.CurveNE);
+
+            ConnectAllSegments();
         }
 
-        private enum Direction { North, East, South, West }
-
-        private void CreateRailLine(Station start, Station end, Direction dir)
+        private void CreateRailLine(Vector2 start, Vector2 end, Direction dir, TrackSegment.TrackType type)
         {
-            var currentPos = start.GridPosition;
-            var step = Vector2.Zero;
-
-            //крок руху
-            switch (dir)
+            var step = dir switch
             {
-                case Direction.East: step = new Vector2(1, 0); break;
-                case Direction.West: step = new Vector2(-1, 0); break;
-                case Direction.North: step = new Vector2(0, -1); break;
-                case Direction.South: step = new Vector2(0, 1); break;
-            }
+                Direction.East => new Vector2(1, 0),
+                Direction.West => new Vector2(-1, 0),
+                Direction.North => new Vector2(0, -1),
+                Direction.South => new Vector2(0, 1),
+                _ => Vector2.Zero
+            };
 
-            //генерація проміжних сегментів
-            while (currentPos != end.GridPosition)
+            var current = start;
+            while (current != end)
             {
-                currentPos += step;
-
-                //пропуск старт станції
-                if (currentPos == start.GridPosition) continue;
-
-                var segment = new TrackSegment { GridPosition = currentPos };
-
-                //додаємо світлофор кожні 3 тайли
-                if ((currentPos.X + currentPos.Y) % 3 == 0)
+                var segment = new TrackSegment
                 {
-                    segment.Signal = new Signal();
-                    Signals.Add(segment.Signal);
-                }
-
+                    GridPosition = current,
+                    Type = type
+                };
                 AddTrack(segment);
-                ConnectToPrevious(segment);
+                current += step;
             }
-
-            //з'єднання кінцевої станції
-            ConnectTracks(Tracks.Last(), end);
         }
 
-        private void ConnectToPrevious(TrackSegment segment)
+        private void AddCurve(Vector2 position, TrackSegment.TrackType curveType)
         {
-            var prev = Tracks.LastOrDefault();
-            if (prev != null) ConnectTracks(prev, segment);
+            var curve = new TrackSegment
+            {
+                GridPosition = position,
+                Type = curveType
+            };
+            AddTrack(curve);
         }
 
-        private void CreateStraightTrack(Station start, Vector2 middlePos, Station end)
+        private void ConnectAllSegments()
         {
-            var middleTrack = new TrackSegment { GridPosition = middlePos };
-            AddTrack(middleTrack);
-
-            ConnectTracks(start, middleTrack);
-            ConnectTracks(middleTrack, end);
-        }
-
-        private void CreateCurvedTrack(Station start, Vector2 curvePos, Station end)
-        {
-            var curveTrack = new TrackSegment { GridPosition = curvePos };
-            var signal = new Signal();
-
-            curveTrack.Signal = signal;
-            AddTrack(curveTrack);
-            Signals.Add(signal);
-
-            ConnectTracks(start, curveTrack);
-            ConnectTracks(curveTrack, end);
+            foreach (var track in Tracks)
+            {
+                foreach (var direction in new[]
+                {
+                    Vector2.UnitX, -Vector2.UnitX,
+                    Vector2.UnitY, -Vector2.UnitY
+                })
+                {
+                    var neighborPos = track.GridPosition + direction;
+                    var neighbor = Tracks.Find(t => t.GridPosition == neighborPos);
+                    if (neighbor != null) track.ConnectTo(neighbor);
+                }
+            }
         }
 
         private void AddStation(Station station)

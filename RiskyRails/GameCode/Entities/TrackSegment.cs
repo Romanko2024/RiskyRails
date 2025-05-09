@@ -19,6 +19,16 @@ namespace RiskyRails.GameCode.Entities
         public Signal Signal { get; set; }                   // пов'язаний світлофор
         public List<TrackSegment> ConnectedSegments { get; } = new();  // з'єднані сегменти
 
+        public TrackType Type { get; set; } = TrackType.StraightX;
+        public enum TrackType
+        {
+            StraightX,
+            StraightY,
+            CurveNE,
+            CurveSE,
+            CurveSW,
+            CurveNW
+        }
         // Методи
         public bool CanPassThrough(Train train)
         {
