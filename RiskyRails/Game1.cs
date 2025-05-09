@@ -5,6 +5,7 @@ using RiskyRails.GameCode.Entities;
 using RiskyRails.GameCode.Entities.Trains;
 using RiskyRails.GameCode.Managers;
 using RiskyRails.GameCode.Utilities;
+using SharpDX.Direct2D1.Effects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,12 @@ namespace RiskyRails
         private Texture2D _tileTexture;
         private Texture2D _tileSwitch;
         private Texture2D _tileSignal;
+        private Texture2D _tileRailX;
+        private Texture2D _tileRailY;
+        private Texture2D _tileCurveNE;
+        private Texture2D _tileCurveSE;
+        private Texture2D _tileCurveSW;
+        private Texture2D _tileCurveNW;
 
         public Game1()
         {
@@ -47,9 +54,16 @@ namespace RiskyRails
         protected override void LoadContent()
         {
             //завантаження текстур
-            _tileTexture = Content.Load<Texture2D>("tile_rail");
+            _tileRailX = Content.Load<Texture2D>("rail_straight_x");
+            _tileRailY = Content.Load<Texture2D>("rail_straight_y");
+            _tileCurveNE = Content.Load<Texture2D>("rail_curve_ne");
+            _tileCurveSE = Content.Load<Texture2D>("rail_curve_se");
+            _tileCurveSW = Content.Load<Texture2D>("rail_curve_sw");
+            _tileCurveNW = Content.Load<Texture2D>("rail_curve_nw");
+            _tileSignal = Content.Load<Texture2D>("tile_signal");
             _tileSwitch = Content.Load<Texture2D>("tile_switch");
             _tileSignal = Content.Load<Texture2D>("tile_signal");
+            _tileTexture = Content.Load<Texture2D>("Tile");
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
@@ -146,33 +160,54 @@ namespace RiskyRails
             // малювання колій
             foreach (var track in _railwayManager.CurrentLevel.Tracks)
             {
-                Texture2D texture = _tileTexture;
-                Color tint = Color.White;
+                Texture2D texture;
+                float rotation = 0f;
+                Vector2 origin = Vector2.Zero;
 
-                if (track.IsDamaged)
+                switch (track.Type)
                 {
-                    tint = Color.Red;
-                }
-                else if (track.Signal != null)
-                {
-                    texture = _tileSignal;
-                    tint = track.Signal.IsGreen ? Color.Lime : Color.Red;
-                }
-                else if (track.IsSwitch)
-                {
-                    texture = _tileSwitch;
+                    case TrackSegment.TrackType.StraightX:
+                        texture = _tileRailX;
+                        origin = new Vector2(_tileRailX.Width / 2, _tileRailY.Height / 2);
+                        break;
+                    case TrackSegment.TrackType.StraightY:
+                        texture = _tileRailY;
+                        rotation = MathHelper.PiOver2;
+                        origin = new Vector2(_tileRailY.Width / 2, _tileRailY.Height / 2);
+                        break;
+                    case TrackSegment.TrackType.CurveNE:
+                        texture = _tileCurveNE;
+                        origin = new Vector2(_tileCurveNE.Width / 2, _tileCurveNE.Height / 2);
+                        break;
+                    case TrackSegment.TrackType.CurveSE:
+                        texture = _tileCurveSE;
+                        rotation = MathHelper.PiOver2;
+                        origin = new Vector2(_tileCurveSE.Width / 2, _tileCurveSE.Height / 2);
+                        break;
+                    case TrackSegment.TrackType.CurveSW:
+                        texture = _tileCurveSW;
+                        rotation = MathHelper.Pi;
+                        origin = new Vector2(_tileCurveSW.Width / 2, _tileCurveSW.Height / 2);
+                        break;
+                    case TrackSegment.TrackType.CurveNW:
+                        texture = _tileCurveNW;
+                        rotation = MathHelper.PiOver2 * 3;
+                        origin = new Vector2(_tileCurveNW.Width / 2, _tileCurveNW.Height / 2);
+                        break;
+                    default:
+                        texture = _tileRailX;
+                        break;
                 }
 
                 var isoPos = IsometricConverter.GridToIso(track.GridPosition);
-                var origin = new Vector2(texture.Width / 2, texture.Height / 2);
                 float depth = IsometricConverter.CalculateDepth(track.GridPosition);
 
                 _spriteBatch.Draw(
                     texture,
                     isoPos,
                     null,
-                    tint,
-                    0f,
+                    Color.White,
+                    rotation,
                     origin,
                     1f,
                     SpriteEffects.None,
