@@ -42,13 +42,22 @@ namespace RiskyRails
 
         protected override void Initialize()
         {
-            _camera = new IsometricCamera(GraphicsDevice.Viewport);
-            _railwayManager = new RailwayManager();
-            _railwayManager.Initialize();
+            try
+            {
+                _camera = new IsometricCamera(GraphicsDevice.Viewport);
+                _railwayManager = new RailwayManager();
+                _railwayManager.Initialize();
 
-            _collisionManager = new CollisionManager();
-
-            base.Initialize();
+                _collisionManager = new CollisionManager();
+                if (_railwayManager.CurrentLevel == null)
+                    throw new InvalidOperationException("Рівень не завантажено!");
+                base.Initialize();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Помилка ініціалізації: {ex}");
+                throw;
+            }
         }
 
         protected override void LoadContent()
