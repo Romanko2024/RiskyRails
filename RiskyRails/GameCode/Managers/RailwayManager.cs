@@ -46,9 +46,9 @@ namespace RiskyRails.GameCode.Managers
                 var current = queue.Dequeue();
                 if (current == end) break;
 
-                foreach (var neighbor in current.ConnectedSegments)
+                foreach (var neighbor in current.ConnectedSegments) //тільки з'єднані сегменти
                 {
-                    if (!visited.Contains(neighbor) && !neighbor.IsDamaged)
+                    if (!visited.Contains(neighbor) && !neighbor.IsDamaged && current.ConnectedSegments.Contains(neighbor))
                     {
                         visited.Add(neighbor);
                         parent[neighbor] = current;

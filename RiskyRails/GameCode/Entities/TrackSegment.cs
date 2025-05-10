@@ -29,6 +29,24 @@ namespace RiskyRails.GameCode.Entities
             CurveSW,
             CurveNW
         }
+        public List<Vector2> GetConnectionPoints()
+        {
+            return Type switch
+            {
+                TrackType.StraightX => new List<Vector2> { Vector2.UnitX, -Vector2.UnitX },
+                TrackType.StraightY => new List<Vector2> { Vector2.UnitY, -Vector2.UnitY },
+                TrackType.CurveNE => new List<Vector2> { Vector2.UnitX, -Vector2.UnitY },
+                TrackType.CurveSE => new List<Vector2> { Vector2.UnitX, Vector2.UnitY },
+                TrackType.CurveSW => new List<Vector2> { -Vector2.UnitX, Vector2.UnitY },
+                TrackType.CurveNW => new List<Vector2> { -Vector2.UnitX, -Vector2.UnitY },
+                _ => new List<Vector2>()
+            };
+        }
+        public bool CanConnectTo(TrackSegment other, Vector2 direction)
+        {
+            var reverseDir = -direction;
+            return other.GetConnectionPoints().Contains(reverseDir);
+        }
         // Методи
         public bool CanPassThrough(Train train)
         {

@@ -54,8 +54,8 @@ namespace RiskyRails
         protected override void LoadContent()
         {
             //завантаження текстур
-            _tileRailX = Content.Load<Texture2D>("rail_straight_x");
-            _tileRailY = Content.Load<Texture2D>("rail_straight_y");
+            _tileRailY = Content.Load<Texture2D>("rail_straight_x");
+            _tileRailX = Content.Load<Texture2D>("rail_straight_y");
             _tileCurveNE = Content.Load<Texture2D>("rail_curve_ne");
             _tileCurveSE = Content.Load<Texture2D>("rail_curve_se");
             _tileCurveSW = Content.Load<Texture2D>("rail_curve_sw");
@@ -171,8 +171,7 @@ namespace RiskyRails
                         origin = new Vector2(_tileRailX.Width / 2, _tileRailY.Height / 2);
                         break;
                     case TrackSegment.TrackType.StraightY:
-                        texture = _tileRailY;
-                        rotation = MathHelper.PiOver2;
+                        texture = _tileRailY;                        
                         origin = new Vector2(_tileRailY.Width / 2, _tileRailY.Height / 2);
                         break;
                     case TrackSegment.TrackType.CurveNE:
@@ -180,18 +179,15 @@ namespace RiskyRails
                         origin = new Vector2(_tileCurveNE.Width / 2, _tileCurveNE.Height / 2);
                         break;
                     case TrackSegment.TrackType.CurveSE:
-                        texture = _tileCurveSE;
-                        rotation = MathHelper.PiOver2;
+                        texture = _tileCurveSE;                        
                         origin = new Vector2(_tileCurveSE.Width / 2, _tileCurveSE.Height / 2);
                         break;
                     case TrackSegment.TrackType.CurveSW:
-                        texture = _tileCurveSW;
-                        rotation = MathHelper.Pi;
+                        texture = _tileCurveSW;                        
                         origin = new Vector2(_tileCurveSW.Width / 2, _tileCurveSW.Height / 2);
                         break;
                     case TrackSegment.TrackType.CurveNW:
-                        texture = _tileCurveNW;
-                        rotation = MathHelper.PiOver2 * 3;
+                        texture = _tileCurveNW;                        
                         origin = new Vector2(_tileCurveNW.Width / 2, _tileCurveNW.Height / 2);
                         break;
                     default:
@@ -207,7 +203,7 @@ namespace RiskyRails
                     isoPos,
                     null,
                     Color.White,
-                    rotation,
+                    0f,
                     origin,
                     1f,
                     SpriteEffects.None,

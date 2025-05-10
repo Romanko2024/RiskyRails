@@ -31,13 +31,17 @@ namespace RiskyRails.GameCode.Entities.Trains
             }
 
             var targetTrack = Path.Peek();
+
+            //перевірка коректності з'єднання
+            if (!CurrentTrack.ConnectedSegments.Contains(targetTrack))
+            {
+                Path.Clear();
+                IsActive = false;
+                return;
+            }
+
             _progress += Speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            // інтерполяція позиції
-            GridPosition = Vector2.Lerp(
-                CurrentTrack.GridPosition,
-                targetTrack.GridPosition,
-                _progress
-            );
+            GridPosition = Vector2.Lerp(CurrentTrack.GridPosition, targetTrack.GridPosition, _progress);
 
             if (_progress >= 1.0f)
             {

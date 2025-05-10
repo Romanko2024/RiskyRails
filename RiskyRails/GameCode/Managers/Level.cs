@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using RiskyRails.GameCode.Entities;
+using static RiskyRails.GameCode.Entities.TrackSegment;
 
 namespace RiskyRails.GameCode.Managers
 {
@@ -34,15 +35,20 @@ namespace RiskyRails.GameCode.Managers
             AddStation(station3);
             AddStation(station4);
 
-            //колії з поворотами
-            CreateRailLine(station1.GridPosition, new Vector2(13, 2), Direction.East, TrackSegment.TrackType.StraightX);
-            AddCurve(station2.GridPosition + new Vector2(0, 1), TrackSegment.TrackType.CurveSE);
-            CreateRailLine(new Vector2(14, 3), new Vector2(14, 13), Direction.South, TrackSegment.TrackType.StraightY);
-            AddCurve(station3.GridPosition + new Vector2(-1, 0), TrackSegment.TrackType.CurveSW);
-            CreateRailLine(new Vector2(13, 14), new Vector2(3, 14), Direction.West, TrackSegment.TrackType.StraightX);
-            AddCurve(station4.GridPosition + new Vector2(0, -1), TrackSegment.TrackType.CurveNW);
-            CreateRailLine(new Vector2(2, 13), new Vector2(2, 3), Direction.North, TrackSegment.TrackType.StraightY);
-            AddCurve(station1.GridPosition + new Vector2(1, 0), TrackSegment.TrackType.CurveNE);
+            //пряма х
+            CreateRailLine(station1.GridPosition, new Vector2(10, 2), Direction.East, TrackType.StraightX);
+
+            //поворот південь
+            AddCurve(new Vector2(11, 2), TrackType.CurveSE);
+
+            // у
+            CreateRailLine(new Vector2(11, 3), new Vector2(11, 10), Direction.South, TrackType.StraightY);
+
+            //поворот захід
+            AddCurve(new Vector2(11, 11), TrackType.CurveSW);
+
+            //х
+            CreateRailLine(new Vector2(10, 11), station4.GridPosition, Direction.West, TrackType.StraightX);
 
             ConnectAllSegments();
         }
@@ -85,15 +91,15 @@ namespace RiskyRails.GameCode.Managers
         {
             foreach (var track in Tracks)
             {
-                foreach (var direction in new[]
-                {
-                    Vector2.UnitX, -Vector2.UnitX,
-                    Vector2.UnitY, -Vector2.UnitY
-                })
+                foreach (var direction in track.GetConnectionPoints())
                 {
                     var neighborPos = track.GridPosition + direction;
-                    var neighbor = Tracks.Find(t => t.GridPosition == neighborPos);
-                    if (neighbor != null) track.ConnectTo(neighbor);
+                    var neighbor = Tracks.FirstOrDefault(t => t.GridPosition == neighborPos);
+
+                    if (neighbor != null && track.CanConnectTo(neighbor, direction))
+                    {
+                        track.ConnectTo(neighbor);
+                    }
                 }
             }
         }
