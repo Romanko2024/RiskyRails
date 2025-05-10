@@ -17,38 +17,27 @@ namespace RiskyRails.GameCode.Managers
 
         private enum Direction { North, East, South, West }
 
-        public void GenerateLevel1()
+        public void GenerateTestLevel()
         {
-            //очищаємо попередні дані
             Tracks.Clear();
             Stations.Clear();
             Signals.Clear();
 
             //станції
-            var station1 = new Station { GridPosition = new Vector2(2, 2), Name = "North Station" };
-            var station2 = new Station { GridPosition = new Vector2(14, 2), Name = "East Station" };
-            var station3 = new Station { GridPosition = new Vector2(14, 14), Name = "South Station" };
-            var station4 = new Station { GridPosition = new Vector2(2, 14), Name = "West Station" };
-
+            var station1 = new Station { GridPosition = new Vector2(5, 5), Name = "Станція А" };
+            var station2 = new Station { GridPosition = new Vector2(15, 5), Name = "Станція Б" };
             AddStation(station1);
             AddStation(station2);
-            AddStation(station3);
-            AddStation(station4);
 
-            //пряма х
-            CreateRailLine(station1.GridPosition, new Vector2(10, 2), Direction.East, TrackType.StraightX);
+            //пряма лінія
+            CreateRailLine(station1.GridPosition, station2.GridPosition, Direction.East, TrackSegment.TrackType.StraightX);
 
-            //поворот південь
-            AddCurve(new Vector2(11, 2), TrackType.CurveSE);
-
-            // у
-            CreateRailLine(new Vector2(11, 3), new Vector2(11, 10), Direction.South, TrackType.StraightY);
-
-            //поворот захід
-            AddCurve(new Vector2(11, 11), TrackType.CurveSW);
-
-            //х
-            CreateRailLine(new Vector2(10, 11), station4.GridPosition, Direction.West, TrackType.StraightX);
+            //шлях через повороти
+            CreateRailLine(new Vector2(5, 6), new Vector2(5, 11), Direction.South, TrackSegment.TrackType.StraightY);
+            AddCurve(new Vector2(5, 11), TrackSegment.TrackType.CurveSE);
+            CreateRailLine(new Vector2(6, 11), new Vector2(15, 11), Direction.East, TrackSegment.TrackType.StraightX);
+            AddCurve(new Vector2(15, 11), TrackSegment.TrackType.CurveSW);
+            CreateRailLine(new Vector2(15, 10), station2.GridPosition + new Vector2(0, -1), Direction.North, TrackSegment.TrackType.StraightY);
 
             ConnectAllSegments();
         }
@@ -77,12 +66,12 @@ namespace RiskyRails.GameCode.Managers
             }
         }
 
-        private void AddCurve(Vector2 position, TrackSegment.TrackType curveType)
+        private void AddCurve(Vector2 position, TrackSegment.TrackType type)
         {
             var curve = new TrackSegment
             {
                 GridPosition = position,
-                Type = curveType
+                Type = type
             };
             AddTrack(curve);
         }

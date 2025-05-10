@@ -17,10 +17,8 @@ namespace RiskyRails.GameCode.Managers
         {
             //створення рівнів
             var level1 = new Level();
-            level1.GenerateLevel1();
+            level1.GenerateTestLevel();
             Levels.Add(level1);
-
-            //завантаження першого рівня за замовчуванням
             LoadLevel(0);
         }
 
