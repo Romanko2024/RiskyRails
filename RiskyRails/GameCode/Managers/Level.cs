@@ -41,7 +41,17 @@ namespace RiskyRails.GameCode.Managers
 
             ConnectAllSegments();
         }
-
+        private void AddSignalSegment(Vector2 position, TrackType type)
+        {
+            var segment = new TrackSegment
+            {
+                GridPosition = position,
+                Type = type,
+                Signal = new Signal()
+            };
+            AddTrack(segment);
+            Signals.Add(segment.Signal);
+        }
         private void CreateRailLine(Vector2 start, Vector2 end, Direction dir, TrackSegment.TrackType type)
         {
             var step = dir switch
@@ -52,7 +62,25 @@ namespace RiskyRails.GameCode.Managers
                 Direction.South => new Vector2(0, 1),
                 _ => Vector2.Zero
             };
-
+            switch (dir)
+            {
+                case Direction.East:
+                    if (start.Y != end.Y)
+                        throw new ArgumentException("неправильні координати прямої");
+                    break;
+                case Direction.North:
+                    if (start.X != end.X)
+                        throw new ArgumentException("неправильні координати прямої");
+                    break;
+                case Direction.South:
+                    if (start.X != end.X)
+                        throw new ArgumentException("неправильні координати прямої");
+                    break;
+                case Direction.West:
+                    if (start.Y != end.Y)
+                        throw new ArgumentException("неправильні координати прямої");
+                    break;
+            }
             var current = start;
             while (current != end)
             {

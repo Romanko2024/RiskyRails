@@ -24,6 +24,8 @@ namespace RiskyRails.GameCode.Entities
         {
             StraightX,
             StraightY,
+            StraightX_Signal,
+            StraightY_Signal,
             CurveNE,
             CurveSE,
             CurveSW,

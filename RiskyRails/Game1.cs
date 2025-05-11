@@ -9,6 +9,7 @@ using SharpDX.Direct2D1.Effects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static RiskyRails.GameCode.Entities.TrackSegment;
 
 namespace RiskyRails
 {
@@ -26,6 +27,8 @@ namespace RiskyRails
         private Texture2D _tileTexture;
         private Texture2D _tileSwitch;
         private Texture2D _tileSignal;
+        private Texture2D _tileSignalX;
+        private Texture2D _tileSignalY;
         private Texture2D _tileRailX;
         private Texture2D _tileRailY;
         private Texture2D _tileCurveNE;
@@ -73,6 +76,8 @@ namespace RiskyRails
             _tileSwitch = Content.Load<Texture2D>("tile_switch");
             _tileSignal = Content.Load<Texture2D>("tile_signal");
             _tileTexture = Content.Load<Texture2D>("Tile");
+            _tileSignalX = Content.Load<Texture2D>("StraightX_Signal");
+            _tileSignalY = Content.Load<Texture2D>("StraightY_Signal");
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
@@ -172,6 +177,7 @@ namespace RiskyRails
                 Texture2D texture;
                 float rotation = 0f;
                 Vector2 origin = Vector2.Zero;
+                Color tint = Color.White;
 
                 switch (track.Type)
                 {
@@ -198,6 +204,14 @@ namespace RiskyRails
                     case TrackSegment.TrackType.CurveNW:
                         texture = _tileCurveNW;                        
                         origin = new Vector2(_tileCurveNW.Width / 2, _tileCurveNW.Height / 2);
+                        break;
+                    case TrackType.StraightX_Signal:
+                        texture = _tileSignalX;
+                        tint = track.Signal.IsGreen ? Color.Green : Color.Red;
+                        break;
+                    case TrackType.StraightY_Signal:
+                        texture = _tileSignalY;
+                        tint = track.Signal.IsGreen ? Color.Green : Color.Red;
                         break;
                     default:
                         texture = _tileRailX;
