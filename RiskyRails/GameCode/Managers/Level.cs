@@ -52,6 +52,16 @@ namespace RiskyRails.GameCode.Managers
             AddTrack(segment);
             Signals.Add(segment.Signal);
         }
+
+        public void AddSwitch(Vector2 position, TrackType primaryType, TrackType secondaryType)
+        {
+            var switchTrack = new SwitchTrack(primaryType, secondaryType)
+            {
+                GridPosition = position
+            };
+            AddTrack(switchTrack);
+        }
+
         private void CreateRailLine(Vector2 start, Vector2 end, Direction dir, TrackSegment.TrackType type)
         {
             var step = dir switch
@@ -104,10 +114,12 @@ namespace RiskyRails.GameCode.Managers
             AddTrack(curve);
         }
 
-        private void ConnectAllSegments()
+        public void ConnectAllSegments()
         {
             foreach (var track in Tracks)
             {
+                track.ConnectedSegments.Clear();
+
                 foreach (var direction in track.GetConnectionPoints())
                 {
                     var neighborPos = track.GridPosition + direction;

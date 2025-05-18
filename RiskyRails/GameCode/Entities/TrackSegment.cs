@@ -31,7 +31,7 @@ namespace RiskyRails.GameCode.Entities
             CurveSW,
             CurveNW
         }
-        public List<Vector2> GetConnectionPoints()
+        public virtual List<Vector2> GetConnectionPoints()
         {
             return Type switch
             {
@@ -74,6 +74,69 @@ namespace RiskyRails.GameCode.Entities
         public void SetDamaged(bool isDamaged)
         {
             IsDamaged = isDamaged;
+        }
+        protected virtual void OnTypeChanged()
+        {
+            //
+        }
+
+    }
+    public class SwitchTrack : TrackSegment
+    {
+        public TrackType SecondaryType { get; private set; }
+        private TrackType _primaryType;
+
+        public TrackType PrimaryType => _primaryType;
+
+        public SwitchTrack(TrackType primaryType, TrackType secondaryType)
+            : base()
+        {
+            if (!IsValidTypeCombination(primaryType, secondaryType))
+                throw new ArgumentException("Недопустима комбінація типів для стрілки");
+
+            _primaryType = primaryType;
+            SecondaryType = secondaryType;
+            Type = primaryType;
+            IsSwitch = true;
+        }
+
+        public void Toggle()
+        {
+            Type = (Type == _primaryType) ? SecondaryType : _primaryType;
+            OnTypeChanged();
+        }
+
+        protected override void OnTypeChanged()
+        {
+            base.OnTypeChanged();
+            ConnectedSegments.Clear();
+        }
+
+        public override List<Vector2> GetConnectionPoints()
+        {
+            return Type switch
+            {
+                TrackType.StraightX => new List<Vector2> { Vector2.UnitX, -Vector2.UnitX },
+                TrackType.StraightY => new List<Vector2> { Vector2.UnitY, -Vector2.UnitY },
+                TrackType.CurveNE => new List<Vector2> { Vector2.UnitX, -Vector2.UnitY },
+                TrackType.CurveSE => new List<Vector2> { Vector2.UnitX, Vector2.UnitY },
+                TrackType.CurveSW => new List<Vector2> { -Vector2.UnitX, Vector2.UnitY },
+                TrackType.CurveNW => new List<Vector2> { -Vector2.UnitX, -Vector2.UnitY },
+                _ => base.GetConnectionPoints()
+            };
+        }
+
+        private static bool IsValidTypeCombination(TrackType t1, TrackType t2)
+        {
+            var validPairs = new HashSet<(TrackType, TrackType)>
+        {
+            (TrackType.StraightX, TrackType.CurveNE),
+            (TrackType.StraightX, TrackType.CurveSE),
+            (TrackType.StraightY, TrackType.CurveNW),
+            (TrackType.StraightY, TrackType.CurveSW)
+        };
+
+            return validPairs.Contains((t1, t2)) || validPairs.Contains((t2, t1));
         }
     }
 }

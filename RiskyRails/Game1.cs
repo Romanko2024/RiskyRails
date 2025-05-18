@@ -35,6 +35,8 @@ namespace RiskyRails
         private Texture2D _tileCurveSE;
         private Texture2D _tileCurveSW;
         private Texture2D _tileCurveNW;
+        private Texture2D _tileSwitchPrimary;
+        private Texture2D _tileSwitchSecondary;
 
         public Game1()
         {
@@ -73,8 +75,8 @@ namespace RiskyRails
             _tileCurveNW = Content.Load<Texture2D>("rail_curve_sw");
             _tileCurveSW = Content.Load<Texture2D>("rail_curve_nw");
             _tileSignal = Content.Load<Texture2D>("tile_signal");
-            _tileSwitch = Content.Load<Texture2D>("tile_switch");
-            _tileSignal = Content.Load<Texture2D>("tile_signal");
+            _tileSwitchPrimary = Content.Load<Texture2D>("switch_primary");
+            _tileSwitchSecondary = Content.Load<Texture2D>("switch_secondary");
             _tileTexture = Content.Load<Texture2D>("Tile");
             _tileSignalX = Content.Load<Texture2D>("StraightX_Signal");
             _tileSignalY = Content.Load<Texture2D>("StraightY_Signal");
@@ -142,11 +144,11 @@ namespace RiskyRails
 
             // спавн ремонтних потягів
             var mouseState = Mouse.GetState();
+            var worldPos = _camera.ScreenToWorld(new Vector2(mouseState.X, mouseState.Y));
+            var gridPos = IsometricConverter.IsoToGrid(worldPos);
+            gridPos = new Vector2((int)gridPos.X, (int)gridPos.Y);
             if (mouseState.LeftButton == ButtonState.Pressed)
             {
-                var worldPos = _camera.ScreenToWorld(new Vector2(mouseState.X, mouseState.Y));
-                var gridPos = IsometricConverter.IsoToGrid(worldPos);
-                gridPos = new Vector2((int)gridPos.X, (int)gridPos.Y);
 
                 // Логіка спавну ремонтного поїзда
                 var track = _railwayManager.CurrentLevel.Tracks.FirstOrDefault(t => t.GridPosition == gridPos);
@@ -156,7 +158,15 @@ namespace RiskyRails
                     _activeTrains.Add(new RepairTrain { CurrentTrack = station });
                 }
             }
-
+            if (mouseState.RightButton == ButtonState.Pressed)
+            {
+                var track = _railwayManager.CurrentLevel.Tracks.FirstOrDefault(t => t.GridPosition == gridPos);
+                if (track is SwitchTrack switchTrack)
+                {
+                    switchTrack.Toggle();
+                    _railwayManager.CurrentLevel.ConnectAllSegments(); // Оновлюємо з'єднання
+                }
+            }
             base.Update(gameTime);
         }
 
@@ -179,43 +189,55 @@ namespace RiskyRails
                 Vector2 origin = Vector2.Zero;
                 Color tint = Color.White;
 
-                switch (track.Type)
+                // Спеціальна обробка для стрілок
+                if (track is SwitchTrack switchTrack)
                 {
-                    case TrackSegment.TrackType.StraightX:
-                        texture = _tileRailX;
-                        origin = new Vector2(_tileRailX.Width / 2, _tileRailY.Height / 2);
-                        break;
-                    case TrackSegment.TrackType.StraightY:
-                        texture = _tileRailY;                        
-                        origin = new Vector2(_tileRailY.Width / 2, _tileRailY.Height / 2);
-                        break;
-                    case TrackSegment.TrackType.CurveNE:
-                        texture = _tileCurveNE;
-                        origin = new Vector2(_tileCurveNE.Width / 2, _tileCurveNE.Height / 2);
-                        break;
-                    case TrackSegment.TrackType.CurveSE:
-                        texture = _tileCurveSE;                        
-                        origin = new Vector2(_tileCurveSE.Width / 2, _tileCurveSE.Height / 2);
-                        break;
-                    case TrackSegment.TrackType.CurveSW:
-                        texture = _tileCurveSW;                        
-                        origin = new Vector2(_tileCurveSW.Width / 2, _tileCurveSW.Height / 2);
-                        break;
-                    case TrackSegment.TrackType.CurveNW:
-                        texture = _tileCurveNW;                        
-                        origin = new Vector2(_tileCurveNW.Width / 2, _tileCurveNW.Height / 2);
-                        break;
-                    case TrackType.StraightX_Signal:
-                        texture = _tileSignalX;
-                        tint = track.Signal.IsGreen ? Color.Green : Color.Red;
-                        break;
-                    case TrackType.StraightY_Signal:
-                        texture = _tileSignalY;
-                        tint = track.Signal.IsGreen ? Color.Green : Color.Red;
-                        break;
-                    default:
-                        texture = _tileRailX;
-                        break;
+                    texture = switchTrack.Type == switchTrack.PrimaryType
+                        ? _tileSwitchPrimary
+                        : _tileSwitchSecondary;
+                    origin = new Vector2(texture.Width / 2, texture.Height / 2);
+                }
+                else
+                {
+                    // Звичайна логіка для інших типів
+                    switch (track.Type)
+                    {
+                        case TrackType.StraightX:
+                            texture = _tileRailX;
+                            origin = new Vector2(_tileRailX.Width / 2, _tileRailX.Height / 2);
+                            break;
+                        case TrackType.StraightY:
+                            texture = _tileRailY;
+                            origin = new Vector2(_tileRailY.Width / 2, _tileRailY.Height / 2);
+                            break;
+                        case TrackType.CurveNE:
+                            texture = _tileCurveNE;
+                            origin = new Vector2(_tileCurveNE.Width / 2, _tileCurveNE.Height / 2);
+                            break;
+                        case TrackType.CurveSE:
+                            texture = _tileCurveSE;
+                            origin = new Vector2(_tileCurveSE.Width / 2, _tileCurveSE.Height / 2);
+                            break;
+                        case TrackType.CurveSW:
+                            texture = _tileCurveSW;
+                            origin = new Vector2(_tileCurveSW.Width / 2, _tileCurveSW.Height / 2);
+                            break;
+                        case TrackType.CurveNW:
+                            texture = _tileCurveNW;
+                            origin = new Vector2(_tileCurveNW.Width / 2, _tileCurveNW.Height / 2);
+                            break;
+                        case TrackType.StraightX_Signal:
+                            texture = _tileSignalX;
+                            tint = track.Signal?.IsGreen == true ? Color.Green : Color.Red;
+                            break;
+                        case TrackType.StraightY_Signal:
+                            texture = _tileSignalY;
+                            tint = track.Signal?.IsGreen == true ? Color.Green : Color.Red;
+                            break;
+                        default:
+                            texture = _tileRailX;
+                            break;
+                    }
                 }
 
                 var isoPos = IsometricConverter.GridToIso(track.GridPosition);
