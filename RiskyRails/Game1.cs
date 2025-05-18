@@ -185,57 +185,28 @@ namespace RiskyRails
             foreach (var track in _railwayManager.CurrentLevel.Tracks)
             {
                 Texture2D texture;
-                float rotation = 0f;
                 Vector2 origin = Vector2.Zero;
                 Color tint = Color.White;
 
-                // Спеціальна обробка для стрілок
                 if (track is SwitchTrack switchTrack)
                 {
-                    texture = switchTrack.Type == switchTrack.PrimaryType
-                        ? _tileSwitchPrimary
-                        : _tileSwitchSecondary;
+                    //текстури колій + сірий відтінок
+                    texture = GetTextureForTrackType(switchTrack.Type);
+                    tint = Color.LightGray;
                     origin = new Vector2(texture.Width / 2, texture.Height / 2);
                 }
                 else
                 {
-                    // Звичайна логіка для інших типів
+                    //колії та сигнали
+                    texture = GetTextureForTrackType(track.Type);
+                    origin = new Vector2(texture.Width / 2, texture.Height / 2);
+
+                    //обробка сигналів
                     switch (track.Type)
                     {
-                        case TrackType.StraightX:
-                            texture = _tileRailX;
-                            origin = new Vector2(_tileRailX.Width / 2, _tileRailX.Height / 2);
-                            break;
-                        case TrackType.StraightY:
-                            texture = _tileRailY;
-                            origin = new Vector2(_tileRailY.Width / 2, _tileRailY.Height / 2);
-                            break;
-                        case TrackType.CurveNE:
-                            texture = _tileCurveNE;
-                            origin = new Vector2(_tileCurveNE.Width / 2, _tileCurveNE.Height / 2);
-                            break;
-                        case TrackType.CurveSE:
-                            texture = _tileCurveSE;
-                            origin = new Vector2(_tileCurveSE.Width / 2, _tileCurveSE.Height / 2);
-                            break;
-                        case TrackType.CurveSW:
-                            texture = _tileCurveSW;
-                            origin = new Vector2(_tileCurveSW.Width / 2, _tileCurveSW.Height / 2);
-                            break;
-                        case TrackType.CurveNW:
-                            texture = _tileCurveNW;
-                            origin = new Vector2(_tileCurveNW.Width / 2, _tileCurveNW.Height / 2);
-                            break;
                         case TrackType.StraightX_Signal:
-                            texture = _tileSignalX;
-                            tint = track.Signal?.IsGreen == true ? Color.Green : Color.Red;
-                            break;
                         case TrackType.StraightY_Signal:
-                            texture = _tileSignalY;
                             tint = track.Signal?.IsGreen == true ? Color.Green : Color.Red;
-                            break;
-                        default:
-                            texture = _tileRailX;
                             break;
                     }
                 }
@@ -247,7 +218,7 @@ namespace RiskyRails
                     texture,
                     isoPos,
                     null,
-                    Color.White,
+                    tint,
                     0f,
                     origin,
                     1f,
@@ -278,7 +249,7 @@ namespace RiskyRails
                     trainColor,
                     0f,
                     origin,
-                    0.7f, //масштаб поїзда
+                    0.7f,
                     SpriteEffects.None,
                     trainDepth
                 );
@@ -286,6 +257,23 @@ namespace RiskyRails
             _spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        //метод для отримання текстури за типом колії
+        private Texture2D GetTextureForTrackType(TrackType type)
+        {
+            switch (type)
+            {
+                case TrackType.StraightX: return _tileRailX;
+                case TrackType.StraightY: return _tileRailY;
+                case TrackType.CurveNE: return _tileCurveNE;
+                case TrackType.CurveSE: return _tileCurveSE;
+                case TrackType.CurveSW: return _tileCurveSW;
+                case TrackType.CurveNW: return _tileCurveNW;
+                case TrackType.StraightX_Signal: return _tileSignalX;
+                case TrackType.StraightY_Signal: return _tileSignalY;
+                default: return _tileRailX;
+            }
         }
     }
 }
