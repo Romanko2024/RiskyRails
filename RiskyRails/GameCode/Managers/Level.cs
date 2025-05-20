@@ -23,23 +23,97 @@ namespace RiskyRails.GameCode.Managers
             Stations.Clear();
             Signals.Clear();
 
-            //станції
-            var station1 = new Station { GridPosition = new Vector2(5, 5), Name = "Станція А" };
-            var station2 = new Station { GridPosition = new Vector2(15, 5), Name = "Станція Б" };
-            AddStation(station1);
-            AddStation(station2);
+            // Станції з вирівняними координатами
+            var stationA = new Station { GridPosition = new Vector2(5, 5), Name = "A" };
+            var stationB = new Station { GridPosition = new Vector2(18, 5), Name = "B" };
+            var stationC = new Station { GridPosition = new Vector2(12, 15), Name = "C" };
+            AddStation(stationA);
+            AddStation(stationB);
+            AddStation(stationC);
+            //від верх до правої
+            for (int x = 6; x < 10; x++)
+            {
+                AddTrack(new TrackSegment
+                {
+                    GridPosition = new Vector2(x, 5),
+                    Type = TrackType.StraightX
+                });
+            }
+            AddSwitch(new Vector2(10, 5),
+                TrackType.StraightX,
+                TrackType.CurveNE);
+            for (int x = 11; x < 14; x++)
+            {
+                AddTrack(new TrackSegment
+                {
+                    GridPosition = new Vector2(x, 5),
+                    Type = TrackType.StraightX
+                });
+            }
+            AddSwitch(new Vector2(14, 5),
+                TrackType.StraightX,
+                TrackType.CurveNE);
+            for (int x = 15; x < 18; x++)
+            {
+                AddTrack(new TrackSegment
+                {
+                    GridPosition = new Vector2(x, 5),
+                    Type = TrackType.StraightX
+                });
+            }
+            //кишеня від верх до прав
+            AddCurve(new Vector2(10, 6),
+                TrackType.CurveSE);
+            AddSignalSegment(new Vector2(11, 6), TrackType.StraightX_Signal);
+            AddSignalSegment(new Vector2(13, 6), TrackType.StraightX_Signal);
+            AddCurve(new Vector2(14, 6),
+                TrackType.CurveSW);
+            AddSwitch(new Vector2(12, 6),
+                TrackType.StraightY,
+                TrackType.CurveNW);
+            //від кишеня до лівої
+            for (int y = 7; y < 10; y++)
+            {
+                AddTrack(new TrackSegment
+                {
+                    GridPosition = new Vector2(12, y),
+                    Type = TrackType.StraightY
+                });
+            }
+            AddSignalSegment(new Vector2(12, 10), TrackType.StraightY_Signal);
+            AddSwitch(new Vector2(12, 11),
+                TrackType.StraightY,
+                TrackType.CurveNW);
+            for (int y = 12; y < 15; y++)
+            {
+                AddTrack(new TrackSegment
+                {
+                    GridPosition = new Vector2(12, y),
+                    Type = TrackType.StraightY
+                });
+            }
 
-            //пряма лінія
-            CreateRailLine(station1.GridPosition, station2.GridPosition, Direction.East, TrackSegment.TrackType.StraightX);
 
-            //шлях через повороти
-            CreateRailLine(new Vector2(5, 6), new Vector2(5, 11), Direction.South, TrackSegment.TrackType.StraightY);
-            AddCurve(new Vector2(5, 11), TrackSegment.TrackType.CurveSE);
-            CreateRailLine(new Vector2(6, 11), new Vector2(15, 11), Direction.East, TrackSegment.TrackType.StraightX);
-            AddCurve(new Vector2(15, 11), TrackSegment.TrackType.CurveSW);
-            CreateRailLine(new Vector2(15, 10), station2.GridPosition + new Vector2(0, -1), Direction.North, TrackSegment.TrackType.StraightY);
 
             ConnectAllSegments();
+
+            // Фінальна перевірка коректності
+            ValidateLevel();
+        }
+
+        private void ValidateLevel()
+        {
+            foreach (var track in Tracks)
+            {
+                if (track.GridPosition.X < 0 || track.GridPosition.Y < 0)
+                    throw new Exception($"Некоректні координати у сегмента {track.GridPosition}");
+
+                foreach (var connected in track.ConnectedSegments)
+                {
+                    if (!connected.ConnectedSegments.Contains(track))
+                        throw new Exception($"Некоректне з'єднання {track.GridPosition} -> {connected.GridPosition}");
+                }
+            }
         }
         private void AddSignalSegment(Vector2 position, TrackType type)
         {
@@ -118,16 +192,21 @@ namespace RiskyRails.GameCode.Managers
         {
             foreach (var track in Tracks)
             {
-                track.ConnectedSegments.Clear();
-
                 foreach (var direction in track.GetConnectionPoints())
                 {
                     var neighborPos = track.GridPosition + direction;
                     var neighbor = Tracks.FirstOrDefault(t => t.GridPosition == neighborPos);
 
-                    if (neighbor != null && track.CanConnectTo(neighbor, direction))
+                    // Додано перевірку зворотного з'єднання
+                    if (neighbor != null
+                        && track.CanConnectTo(neighbor, direction)
+                        && neighbor.CanConnectTo(track, -direction)) // Нова перевірка
                     {
-                        track.ConnectTo(neighbor);
+                        if (!track.ConnectedSegments.Contains(neighbor))
+                            track.ConnectedSegments.Add(neighbor);
+
+                        if (!neighbor.ConnectedSegments.Contains(track))
+                            neighbor.ConnectedSegments.Add(track);
                     }
                 }
             }
