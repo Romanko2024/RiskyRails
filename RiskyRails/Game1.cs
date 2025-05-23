@@ -138,13 +138,13 @@ namespace RiskyRails
             _camera.Update();
 
             //періодична зміна сигналів
-            if (new Random().Next(100) < 5)
-            {
-                foreach (var signal in _railwayManager.CurrentLevel.Signals)
-                {
-                    signal.IsGreen = !signal.IsGreen;
-                }
-            }
+            //if (new Random().Next(100) < 5)
+            //{
+            //    foreach (var signal in _railwayManager.CurrentLevel.Signals)
+            //    {
+            //        signal.IsGreen = !signal.IsGreen;
+            //    }
+            //}
 
             //
             var mouseState = Mouse.GetState();
@@ -154,17 +154,19 @@ namespace RiskyRails
                 (int)MathF.Round(gridPos.X),
                 (int)MathF.Round(gridPos.Y)
             );
-            if (mouseState.LeftButton == ButtonState.Pressed)
+            if (mouseState.LeftButton == ButtonState.Pressed &&
+        _previousMouseState.LeftButton == ButtonState.Released)
             {
+                var track = _railwayManager.CurrentLevel.Tracks
+                    .FirstOrDefault(t => t.GridPosition == gridPos);
 
-                // Логіка спавну ремонтного поїзда
-                var track = _railwayManager.CurrentLevel.Tracks.FirstOrDefault(t => t.GridPosition == gridPos);
-                //явна перевірка типу через is
                 if (track is Station station)
                 {
                     _activeTrains.Add(new RepairTrain { CurrentTrack = station });
                 }
             }
+
+            // правий клік - перемикання стрілок/сигналів
             if (mouseState.RightButton == ButtonState.Pressed &&
                 _previousMouseState.RightButton == ButtonState.Released)
             {
@@ -178,9 +180,21 @@ namespace RiskyRails
                     {
                         switchTrack.Toggle();
                         _railwayManager.CurrentLevel.ConnectAllSegments();
-                        _lastToggleTime = gameTime.TotalGameTime.TotalMilliseconds;
                         Debug.WriteLine($"Переключено стрілку на {gridPos}");
                     }
+                    else
+                    {
+                        var signalTrack = _railwayManager.CurrentLevel.Tracks
+                            .FirstOrDefault(t => t.GridPosition == gridPos && t.Signal != null);
+
+                        if (signalTrack != null)
+                        {
+                            signalTrack.Signal.IsGreen = !signalTrack.Signal.IsGreen;
+                            Debug.WriteLine($"Переключено сигнал на {gridPos}");
+                        }
+                    }
+
+                    _lastToggleTime = gameTime.TotalGameTime.TotalMilliseconds;
                 }
             }
             _previousMouseState = mouseState;
