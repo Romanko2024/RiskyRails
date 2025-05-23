@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -223,6 +224,7 @@ namespace RiskyRails.GameCode.Managers
 
         public void ConnectAllSegments()
         {
+            Debug.WriteLine("=== Початок з'єднання сегментів ===");
             foreach (var track in Tracks)
             {
                 foreach (var direction in track.GetConnectionPoints())
@@ -235,14 +237,26 @@ namespace RiskyRails.GameCode.Managers
                         && track.CanConnectTo(neighbor, direction)
                         && neighbor.CanConnectTo(track, -direction)) // Нова перевірка
                     {
+                        Debug.WriteLine($"Спроба з'єднати {track.GridPosition} з {neighbor.GridPosition}...");
                         if (!track.ConnectedSegments.Contains(neighbor))
+                        {
                             track.ConnectedSegments.Add(neighbor);
+                            Debug.WriteLine($"Додано з'єднання: {track.GridPosition} -> {neighbor.GridPosition}");
+                        }
 
                         if (!neighbor.ConnectedSegments.Contains(track))
+                        {
                             neighbor.ConnectedSegments.Add(track);
+                            Debug.WriteLine($"Додано зворотнє з'єднання: {neighbor.GridPosition} -> {track.GridPosition}");
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"Не вдалося з'єднати {track.GridPosition} з {neighborPos}: сусід {neighbor?.GridPosition} не знайдений або несумісний");
+                        }
                     }
                 }
             }
+            Debug.WriteLine("=== Завершення з'єднання сегментів ===");
         }
 
         private void AddStation(Station station)
