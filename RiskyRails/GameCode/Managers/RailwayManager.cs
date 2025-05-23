@@ -32,24 +32,21 @@ namespace RiskyRails.GameCode.Managers
 
         public Queue<TrackSegment> FindPath(Station start, Station end)
         {
+            var visited = new Dictionary<TrackSegment, TrackSegment>();
             var queue = new Queue<TrackSegment>();
-            var visited = new HashSet<TrackSegment>();
-            var parent = new Dictionary<TrackSegment, TrackSegment>();
-
             queue.Enqueue(start);
-            visited.Add(start);
+            visited[start] = null;
 
             while (queue.Count > 0)
             {
                 var current = queue.Dequeue();
                 if (current == end) break;
 
-                foreach (var neighbor in current.ConnectedSegments) //тільки з'єднані сегменти
+                foreach (var neighbor in current.ConnectedSegments.Where(t => t.CanPassThrough(null)))
                 {
-                    if (!visited.Contains(neighbor) && !neighbor.IsDamaged && current.ConnectedSegments.Contains(neighbor))
+                    if (!visited.ContainsKey(neighbor))
                     {
-                        visited.Add(neighbor);
-                        parent[neighbor] = current;
+                        visited[neighbor] = current;
                         queue.Enqueue(neighbor);
                     }
                 }
@@ -61,7 +58,7 @@ namespace RiskyRails.GameCode.Managers
             while (node != null && node != start)
             {
                 path.Push(node);
-                node = parent.ContainsKey(node) ? parent[node] : null;
+                node = visited.ContainsKey(node) ? visited[node] : null;
             }
 
             var result = new Queue<TrackSegment>();

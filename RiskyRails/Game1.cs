@@ -87,7 +87,7 @@ namespace RiskyRails
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
-
+        private Dictionary<Station, double> _lastSpawnTimes = new();
         protected override void Update(GameTime gameTime)
         {
             //оновлення потягів
@@ -101,24 +101,22 @@ namespace RiskyRails
             _collisionManager.CheckCollisions(_activeTrains);
 
             //спавн нових потягів
-            if (new Random().Next(10000) < 100 && _railwayManager.CurrentLevel.Stations.Count >= 2)
+            double currentTime = gameTime.TotalGameTime.TotalSeconds;
+            foreach (var station in _railwayManager.CurrentLevel.Stations)
             {
-                var stations = _railwayManager.CurrentLevel.Stations;
-                var startStation = stations[new Random().Next(stations.Count)];
-                var endStation = stations.FirstOrDefault(s => s != startStation);
-
-                //створення шляху між станціями
-                var path = _railwayManager.FindPath(startStation, endStation);
-                if (path != null && path.Count > 0)
+                if (!_lastSpawnTimes.TryGetValue(station, out var lastTime))
                 {
-                    _activeTrains.Add(new RegularTrain
-                    {
-                        CurrentTrack = startStation,
-                        Destination = endStation,
-                        Path = new Queue<TrackSegment>(path)
-                    });
+                    _lastSpawnTimes[station] = currentTime;
+                    continue;
+                }
+
+                if (currentTime - lastTime >= 12)
+                {
+                    SpawnTrainFromStation(station);
+                    _lastSpawnTimes[station] = currentTime;
                 }
             }
+
 
             //рух камери стрілками
             var keyboardState = Keyboard.GetState();
@@ -201,7 +199,26 @@ namespace RiskyRails
 
             base.Update(gameTime);
         }
+        private void SpawnTrainFromStation(Station station)
+        {
+            var otherStations = _railwayManager.CurrentLevel.Stations
+                .Where(s => s != station)
+                .ToList();
 
+            if (otherStations.Count == 0) return;
+
+            var destination = otherStations[new Random().Next(otherStations.Count)];
+            var path = _railwayManager.FindPath(station, destination);
+
+            var train = new RegularTrain(_railwayManager)
+            {
+                CurrentTrack = station,
+                Destination = destination,
+                Path = path ?? new Queue<TrackSegment>()
+            };
+
+            _activeTrains.Add(train);
+        }
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
