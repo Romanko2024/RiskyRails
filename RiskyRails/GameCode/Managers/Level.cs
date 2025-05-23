@@ -41,7 +41,7 @@ namespace RiskyRails.GameCode.Managers
             }
             AddSwitch(new Vector2(10, 5),
                 TrackType.StraightX,
-                TrackType.CurveNE);
+                TrackType.CurveNW);
             for (int x = 11; x < 14; x++)
             {
                 AddTrack(new TrackSegment
@@ -69,7 +69,7 @@ namespace RiskyRails.GameCode.Managers
             AddCurve(new Vector2(14, 6),
                 TrackType.CurveSW);
             AddSwitch(new Vector2(12, 6),
-                TrackType.StraightY,
+                TrackType.CurveNE,
                 TrackType.CurveNW);
             //від кишеня до лівої
             for (int y = 7; y < 10; y++)

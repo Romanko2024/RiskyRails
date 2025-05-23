@@ -86,13 +86,19 @@ namespace RiskyRails.GameCode.Entities
         public TrackType SecondaryType { get; private set; }
         private TrackType _primaryType;
 
-        public TrackType PrimaryType => _primaryType;
-
         public SwitchTrack(TrackType primaryType, TrackType secondaryType)
             : base()
         {
-            if (!IsValidTypeCombination(primaryType, secondaryType))
-                throw new ArgumentException("Недопустима комбінація типів для стрілки");
+            var forbiddenTypes = new[] {
+            TrackType.StraightX_Signal,
+            TrackType.StraightY_Signal
+        };
+
+            if (forbiddenTypes.Contains(primaryType) ||
+                forbiddenTypes.Contains(secondaryType))
+            {
+                throw new ArgumentException("Не можна використовувати сигнали в стрілках");
+            }
 
             _primaryType = primaryType;
             SecondaryType = secondaryType;
@@ -124,19 +130,6 @@ namespace RiskyRails.GameCode.Entities
                 TrackType.CurveNW => new List<Vector2> { -Vector2.UnitX, -Vector2.UnitY },
                 _ => base.GetConnectionPoints()
             };
-        }
-
-        private static bool IsValidTypeCombination(TrackType t1, TrackType t2)
-        {
-            var validPairs = new HashSet<(TrackType, TrackType)>
-        {
-            (TrackType.StraightX, TrackType.CurveNE),
-            (TrackType.StraightX, TrackType.CurveSE),
-            (TrackType.StraightY, TrackType.CurveNW),
-            (TrackType.StraightY, TrackType.CurveSW)
-        };
-
-            return validPairs.Contains((t1, t2)) || validPairs.Contains((t2, t1));
         }
     }
 }

@@ -8,6 +8,7 @@ using RiskyRails.GameCode.Utilities;
 using SharpDX.Direct2D1.Effects;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using static RiskyRails.GameCode.Entities.TrackSegment;
 
@@ -38,6 +39,9 @@ namespace RiskyRails
         private Texture2D _tileSwitchPrimary;
         private Texture2D _tileSwitchSecondary;
 
+        private MouseState _previousMouseState;
+        private double _lastToggleTime;
+        private const double ClickDelayMs = 300;
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -142,11 +146,14 @@ namespace RiskyRails
                 }
             }
 
-            // спавн ремонтних потягів
+            //
             var mouseState = Mouse.GetState();
             var worldPos = _camera.ScreenToWorld(new Vector2(mouseState.X, mouseState.Y));
             var gridPos = IsometricConverter.IsoToGrid(worldPos);
-            gridPos = new Vector2((int)gridPos.X, (int)gridPos.Y);
+            gridPos = new Vector2(
+                (int)MathF.Round(gridPos.X),
+                (int)MathF.Round(gridPos.Y)
+            );
             if (mouseState.LeftButton == ButtonState.Pressed)
             {
 
@@ -158,15 +165,26 @@ namespace RiskyRails
                     _activeTrains.Add(new RepairTrain { CurrentTrack = station });
                 }
             }
-            if (mouseState.RightButton == ButtonState.Pressed)
+            if (mouseState.RightButton == ButtonState.Pressed &&
+                _previousMouseState.RightButton == ButtonState.Released)
             {
-                var track = _railwayManager.CurrentLevel.Tracks.FirstOrDefault(t => t.GridPosition == gridPos);
-                if (track is SwitchTrack switchTrack)
+                if (gameTime.TotalGameTime.TotalMilliseconds - _lastToggleTime > ClickDelayMs)
                 {
-                    switchTrack.Toggle();
-                    _railwayManager.CurrentLevel.ConnectAllSegments(); // Оновлюємо з'єднання
+                    var switchTrack = _railwayManager.CurrentLevel.Tracks
+                        .OfType<SwitchTrack>()
+                        .FirstOrDefault(t => t.GridPosition == gridPos);
+
+                    if (switchTrack != null)
+                    {
+                        switchTrack.Toggle();
+                        _railwayManager.CurrentLevel.ConnectAllSegments();
+                        _lastToggleTime = gameTime.TotalGameTime.TotalMilliseconds;
+                        Debug.WriteLine($"Переключено стрілку на {gridPos}");
+                    }
                 }
             }
+            _previousMouseState = mouseState;
+
             base.Update(gameTime);
         }
 
