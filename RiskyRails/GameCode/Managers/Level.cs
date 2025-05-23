@@ -27,9 +27,11 @@ namespace RiskyRails.GameCode.Managers
             var stationA = new Station { GridPosition = new Vector2(5, 5), Name = "A" };
             var stationB = new Station { GridPosition = new Vector2(18, 5), Name = "B" };
             var stationC = new Station { GridPosition = new Vector2(12, 15), Name = "C" };
+            var stationD = new Station { GridPosition = new Vector2(4, 11), Name = "D" };
             AddStation(stationA);
             AddStation(stationB);
             AddStation(stationC);
+            AddStation(stationD);
             //від верх до правої
             for (int x = 6; x < 10; x++)
             {
@@ -40,8 +42,8 @@ namespace RiskyRails.GameCode.Managers
                 });
             }
             AddSwitch(new Vector2(10, 5),
-                TrackType.StraightX,
-                TrackType.CurveNW);
+                TrackType.CurveNW,
+                TrackType.StraightX);
             for (int x = 11; x < 14; x++)
             {
                 AddTrack(new TrackSegment
@@ -80,10 +82,12 @@ namespace RiskyRails.GameCode.Managers
                     Type = TrackType.StraightY
                 });
             }
-            AddSignalSegment(new Vector2(12, 10), TrackType.StraightY_Signal);
+            AddSignalSegment(new Vector2(12, 10), TrackType.StraightY_Signal); 
+            //
             AddSwitch(new Vector2(12, 11),
-                TrackType.StraightY,
-                TrackType.CurveNW);
+                TrackType.CurveNW,
+                TrackType.StraightY);
+            //
             for (int y = 12; y < 15; y++)
             {
                 AddTrack(new TrackSegment
@@ -92,7 +96,36 @@ namespace RiskyRails.GameCode.Managers
                     Type = TrackType.StraightY
                 });
             }
-
+            //до д
+            for (int x = 5; x < 12; x++)
+            {
+                AddTrack(new TrackSegment
+                {
+                    GridPosition = new Vector2(x, 11),
+                    Type = TrackType.StraightX
+                });
+            }
+            //від д до першого
+            for (int y = 10; y < 11; y++)
+            {
+                AddTrack(new TrackSegment
+                {
+                    GridPosition = new Vector2(4, y),
+                    Type = TrackType.StraightY
+                });
+            }
+            AddCurve(new Vector2(4, 9),
+                TrackType.CurveNE);
+            AddCurve(new Vector2(5, 9),
+               TrackType.CurveSW);
+            for (int y = 6; y < 9; y++)
+            {
+                AddTrack(new TrackSegment
+                {
+                    GridPosition = new Vector2(5, y),
+                    Type = TrackType.StraightY
+                });
+            }
 
 
             ConnectAllSegments();
