@@ -43,7 +43,7 @@ namespace RiskyRails.GameCode.Managers
                 });
             }
             AddSwitch(new Vector2(10, 5),
-                TrackType.CurveNW,
+                TrackType.CurveSW,
                 TrackType.StraightX);
             for (int x = 11; x < 14; x++)
             {
@@ -55,7 +55,7 @@ namespace RiskyRails.GameCode.Managers
             }
             AddSwitch(new Vector2(14, 5),
                 TrackType.StraightX,
-                TrackType.CurveNE);
+                TrackType.CurveSE);
             for (int x = 15; x < 18; x++)
             {
                 AddTrack(new TrackSegment
@@ -66,14 +66,14 @@ namespace RiskyRails.GameCode.Managers
             }
             //кишеня від верх до прав
             AddCurve(new Vector2(10, 6),
-                TrackType.CurveSE);
+                TrackType.CurveNE);
             AddSignalSegment(new Vector2(11, 6), TrackType.StraightX_Signal);
             AddSignalSegment(new Vector2(13, 6), TrackType.StraightX_Signal);
             AddCurve(new Vector2(14, 6),
-                TrackType.CurveSW);
-            AddSwitch(new Vector2(12, 6),
-                TrackType.CurveNE,
                 TrackType.CurveNW);
+            AddSwitch(new Vector2(12, 6),
+                TrackType.CurveSE,
+                TrackType.CurveSW);
             //від кишеня до лівої
             for (int y = 7; y < 10; y++)
             {
@@ -86,7 +86,7 @@ namespace RiskyRails.GameCode.Managers
             AddSignalSegment(new Vector2(12, 10), TrackType.StraightY_Signal); 
             //
             AddSwitch(new Vector2(12, 11),
-                TrackType.CurveNW,
+                TrackType.CurveSW,
                 TrackType.StraightY);
             //
             for (int y = 12; y < 15; y++)
@@ -116,9 +116,9 @@ namespace RiskyRails.GameCode.Managers
                 });
             }
             AddCurve(new Vector2(4, 9),
-                TrackType.CurveNE);
+                TrackType.CurveSE);
             AddCurve(new Vector2(5, 9),
-               TrackType.CurveSW);
+               TrackType.CurveNW);
             for (int y = 6; y < 9; y++)
             {
                 AddTrack(new TrackSegment
@@ -230,7 +230,10 @@ namespace RiskyRails.GameCode.Managers
                 foreach (var direction in track.GetConnectionPoints())
                 {
                     var neighborPos = track.GridPosition + direction;
-                    var neighbor = Tracks.FirstOrDefault(t => t.GridPosition == neighborPos);
+                    var neighbor = Tracks.FirstOrDefault(t =>
+                        (int)t.GridPosition.X == (int)neighborPos.X &&
+                        (int)t.GridPosition.Y == (int)neighborPos.Y
+                    );
 
                     // Додано перевірку зворотного з'єднання
                     if (neighbor != null

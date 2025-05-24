@@ -14,7 +14,12 @@ namespace RiskyRails.GameCode.Entities
     public class TrackSegment
     {
         // властивості
-        public Vector2 GridPosition { get; set; }           // позиція на сітці
+        private Vector2 _gridPosition;
+        public Vector2 GridPosition
+        {
+            get => _gridPosition;
+            set => _gridPosition = new Vector2((int)value.X, (int)value.Y);
+        }           // позиція на сітці
         public bool IsDamaged { get; private set; }         // чи пошкоджений сегмент
         public bool IsSwitch { get; set; } = false;         // чи є стрілкою
         public Signal Signal { get; set; }                   // пов'язаний світлофор
@@ -36,6 +41,8 @@ namespace RiskyRails.GameCode.Entities
         {
             return Type switch
             {
+                TrackType.StraightX_Signal => new List<Vector2> { Vector2.UnitX, -Vector2.UnitX },
+                TrackType.StraightY_Signal => new List<Vector2> { Vector2.UnitY, -Vector2.UnitY },
                 TrackType.StraightX => new List<Vector2> { Vector2.UnitX, -Vector2.UnitX },
                 TrackType.StraightY => new List<Vector2> { Vector2.UnitY, -Vector2.UnitY },
                 TrackType.CurveNE => new List<Vector2> { Vector2.UnitX, -Vector2.UnitY },
@@ -48,7 +55,12 @@ namespace RiskyRails.GameCode.Entities
         public bool CanConnectTo(TrackSegment other, Vector2 direction)
         {
             var reverseDir = -direction;
-            return other.GetConnectionPoints().Contains(reverseDir);
+            bool canConnect = other.GetConnectionPoints().Contains(reverseDir);
+
+            Debug.WriteLine($"CanConnectTo: {GridPosition} -> {other.GridPosition} | " +
+                            $"Direction: {direction} | Reverse: {reverseDir} | Result: {canConnect}");
+
+            return canConnect;
         }
         // Методи
         public bool CanPassThrough(Train train)
@@ -123,6 +135,8 @@ namespace RiskyRails.GameCode.Entities
         {
             return Type switch
             {
+                TrackType.StraightX_Signal => new List<Vector2> { Vector2.UnitX, -Vector2.UnitX },
+                TrackType.StraightY_Signal => new List<Vector2> { Vector2.UnitY, -Vector2.UnitY },
                 TrackType.StraightX => new List<Vector2> { Vector2.UnitX, -Vector2.UnitX },
                 TrackType.StraightY => new List<Vector2> { Vector2.UnitY, -Vector2.UnitY },
                 TrackType.CurveNE => new List<Vector2> { Vector2.UnitX, -Vector2.UnitY },

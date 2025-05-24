@@ -74,10 +74,10 @@ namespace RiskyRails
             //завантаження текстур
             _tileRailY = Content.Load<Texture2D>("rail_straight_x");
             _tileRailX = Content.Load<Texture2D>("rail_straight_y");
-            _tileCurveSE = Content.Load<Texture2D>("rail_curve_ne");
-            _tileCurveNE = Content.Load<Texture2D>("rail_curve_se");
-            _tileCurveNW = Content.Load<Texture2D>("rail_curve_sw");
-            _tileCurveSW = Content.Load<Texture2D>("rail_curve_nw");
+            _tileCurveSE = Content.Load<Texture2D>("rail_curve_se");
+            _tileCurveNE = Content.Load<Texture2D>("rail_curve_ne");
+            _tileCurveNW = Content.Load<Texture2D>("rail_curve_nw");
+            _tileCurveSW = Content.Load<Texture2D>("rail_curve_sw");
             _tileSignal = Content.Load<Texture2D>("tile_signal");
             _tileSwitchPrimary = Content.Load<Texture2D>("switch_primary");
             _tileSwitchSecondary = Content.Load<Texture2D>("switch_secondary");
