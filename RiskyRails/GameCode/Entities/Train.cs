@@ -18,7 +18,10 @@ namespace RiskyRails.GameCode.Entities
         public float Speed { get; protected set; } = 0.5f;   // швидкість руху (тайлів/секунду)
         public bool IsActive { get; protected set; } = true; // чи активний поїзд
         public Queue<TrackSegment> Path { get; set; } = new();    // шлях руху
-
+        public Vector2 TrackGridPosition => new Vector2(
+        (int)Math.Floor(GridPosition.X),
+        (int)Math.Floor(GridPosition.Y)
+    );
         // абстрактні методи
         public abstract void Update(GameTime gameTime);      // оновлення стану
         public abstract void HandleSignal(Signal signal);    // реакція на сигнал

@@ -281,7 +281,11 @@ namespace RiskyRails
             {
                 var isoPos = IsometricConverter.GridToIso(train.GridPosition);
                 var origin = new Vector2(_tileTexture.Width / 2, _tileTexture.Height / 2);
-                float trainDepth = IsometricConverter.CalculateDepth(train.GridPosition) + 0.0001f;
+
+                float trainDepth = IsometricConverter.CalculateDepth(
+                    train.TrackGridPosition,
+                    offset: 0.01f
+                );
 
                 Color trainColor = train switch
                 {

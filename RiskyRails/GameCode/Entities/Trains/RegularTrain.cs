@@ -83,6 +83,7 @@ namespace RiskyRails.GameCode.Entities.Trains
                 {
                     CurrentTrack = Path.Dequeue();
                     _progress = 0;
+                    GridPosition = CurrentTrack.GridPosition;
                     if (CurrentTrack == Destination) IsActive = false;
                 }
             }

@@ -30,9 +30,9 @@ namespace RiskyRails.GameCode.Utilities
                 (isoPos.Y / (TileHeight / 2) - isoPos.X / (TileWidth / 2)) / 2
             );
         }
-        public static float CalculateDepth(Vector2 gridPosition)
+        public static float CalculateDepth(Vector2 gridPosition, float offset = 0f)
         {
-            return (gridPosition.X + gridPosition.Y) * 0.001f;
+            return (gridPosition.X + gridPosition.Y) * 0.001f + offset;
         }
     }
 }
