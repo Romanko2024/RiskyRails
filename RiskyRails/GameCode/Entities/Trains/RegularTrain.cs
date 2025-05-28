@@ -85,7 +85,7 @@ namespace RiskyRails.GameCode.Entities.Trains
             }
 
             //
-            if (Path.Count > 0)
+            if (Path.Count > 0 && !IsStoppedBySignal)
             {
                 var targetTrack = Path.Peek();
                 //перевірка зміни стану стрілки
@@ -111,7 +111,7 @@ namespace RiskyRails.GameCode.Entities.Trains
                     _currentSwitch = null;
                 }
                 //перевірка коректності з'єднання
-                //перевірка стрілки
+                //без цього поїзд не зупиняється на стрілці а зникає...
                 if (CurrentTrack is SwitchTrack switchTrack)
                 {
                     Vector2 direction = targetTrack.GridPosition - switchTrack.GridPosition;

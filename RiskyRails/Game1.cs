@@ -37,6 +37,7 @@ namespace RiskyRails
         private Texture2D _tileCurveSW;
         private Texture2D _tileCurveNW;
         private Texture2D _stationTexture;
+        private Texture2D _damagedTexture;
 
         private MouseState _previousMouseState;
         private double _lastToggleTime;
@@ -82,6 +83,7 @@ namespace RiskyRails
             _tileSignalX = Content.Load<Texture2D>("StraightX_Signal");
             _tileSignalY = Content.Load<Texture2D>("StraightY_Signal");
             _stationTexture = Content.Load<Texture2D>("station");
+            _damagedTexture = Content.Load<Texture2D>("damaged_track");
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
@@ -254,8 +256,13 @@ namespace RiskyRails
                 Texture2D texture;
                 Vector2 origin = Vector2.Zero;
                 Color tint = Color.White;
-
-                if (track is Station)
+                if (track.IsDamaged)
+                {
+                    texture = _damagedTexture;
+                    origin = new Vector2(texture.Width / 2, texture.Height / 2);
+                    tint = Color.White;
+                }
+                else if (track is Station)
                 {
                     texture = _stationTexture;
                     origin = new Vector2(texture.Width / 2, texture.Height / 2);
