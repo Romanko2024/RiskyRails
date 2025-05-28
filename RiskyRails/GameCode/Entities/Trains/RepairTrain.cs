@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using RiskyRails.GameCode.Interfaces;
 using RiskyRails.GameCode.Entities;
+using System.Diagnostics;
 namespace RiskyRails.GameCode.Entities.Trains
 {
     /// <summary>
@@ -36,6 +37,16 @@ namespace RiskyRails.GameCode.Entities.Trains
         {
             if (IsRepairing) return;
 
+            if (IsStoppedBySignal)
+            {
+                if (StoppedSignal.IsGreen)
+                {
+                    Speed = 0.4f;
+                    IsStoppedBySignal = false;
+                }
+                return;
+            }
+
             if (Path.Count > 0)
             {
                 base.MoveToNextTrack();
@@ -52,6 +63,12 @@ namespace RiskyRails.GameCode.Entities.Trains
             if (!signal.IsGreen)
             {
                 Speed = 0; //зупинка на червоний
+                IsStoppedBySignal = true;
+                StoppedSignal = signal;
+            }
+            else if (IsStoppedBySignal && signal == StoppedSignal)
+            {
+                IsStoppedBySignal = false;
             }
         }
     }

@@ -22,6 +22,9 @@ namespace RiskyRails.GameCode.Entities
         (int)Math.Floor(GridPosition.X),
         (int)Math.Floor(GridPosition.Y)
     );
+        public bool IsStoppedBySignal { get; protected set; }
+        public Signal StoppedSignal { get; protected set; }
+        public float WaitingTime { get; protected set; }
         // абстрактні методи
         public abstract void Update(GameTime gameTime);      // оновлення стану
         public abstract void HandleSignal(Signal signal);    // реакція на сигнал
@@ -41,6 +44,11 @@ namespace RiskyRails.GameCode.Entities
                 CurrentTrack = Path.Dequeue();
                 GridPosition = CurrentTrack.GridPosition;
             }
+        }
+        public virtual void Dispose()
+        {
+            Path.Clear();
+            CurrentTrack = null;
         }
     }
 }

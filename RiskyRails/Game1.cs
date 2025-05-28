@@ -36,8 +36,7 @@ namespace RiskyRails
         private Texture2D _tileCurveSE;
         private Texture2D _tileCurveSW;
         private Texture2D _tileCurveNW;
-        private Texture2D _tileSwitchPrimary;
-        private Texture2D _tileSwitchSecondary;
+        private Texture2D _stationTexture;
 
         private MouseState _previousMouseState;
         private double _lastToggleTime;
@@ -79,11 +78,10 @@ namespace RiskyRails
             _tileCurveNW = Content.Load<Texture2D>("rail_curve_nw");
             _tileCurveSW = Content.Load<Texture2D>("rail_curve_sw");
             _tileSignal = Content.Load<Texture2D>("tile_signal");
-            _tileSwitchPrimary = Content.Load<Texture2D>("switch_primary");
-            _tileSwitchSecondary = Content.Load<Texture2D>("switch_secondary");
             _tileTexture = Content.Load<Texture2D>("Tile");
             _tileSignalX = Content.Load<Texture2D>("StraightX_Signal");
             _tileSignalY = Content.Load<Texture2D>("StraightY_Signal");
+            _stationTexture = Content.Load<Texture2D>("station");
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
@@ -134,15 +132,6 @@ namespace RiskyRails
 
             _camera.Position = newPosition;
             _camera.Update();
-
-            //періодична зміна сигналів
-            //if (new Random().Next(100) < 5)
-            //{
-            //    foreach (var signal in _railwayManager.CurrentLevel.Signals)
-            //    {
-            //        signal.IsGreen = !signal.IsGreen;
-            //    }
-            //}
 
             //
             var mouseState = Mouse.GetState();
@@ -212,35 +201,38 @@ namespace RiskyRails
         private void SpawnTrainFromStation(Station station)
         {
             var otherStations = _railwayManager.CurrentLevel.Stations
-                .Where(s => s != station && s != null)
+                .Where(s => s != station)
                 .ToList();
 
-            if (otherStations.Count == 0)
-            {
-                Debug.WriteLine($"Немає інших станцій для спавну з {station.Name}");
-                return;
-            }
+            if (otherStations.Count == 0) return;
 
             var destination = otherStations[new Random().Next(otherStations.Count)];
-            Debug.WriteLine($"Спавн потяга з {station.Name} до {destination.Name}");
 
-            var path = _railwayManager.FindPath(station, destination);
+            // Перевірка наявності активних потягів на маршруті
+            bool routeOccupied = _activeTrains.OfType<RegularTrain>().Any(t =>
+                (t.DepartureStation == station && t.Destination == destination) ||
+                (t.DepartureStation == destination && t.Destination == station)
+            );
 
-            if (path == null || path.Count == 0)
+            if (routeOccupied)
             {
-                Debug.WriteLine($"Шлях не знайдено! Потяг не створений.");
+                Debug.WriteLine($"Маршрут {station.Name}-{destination.Name} зайнятий. Спавн скасовано.");
                 return;
             }
+
+            var path = _railwayManager.FindPath(station, destination);
+            if (path == null || path.Count == 0) return;
 
             var train = new RegularTrain(_railwayManager)
             {
                 CurrentTrack = station,
+                DepartureStation = station, // Встановлюємо станцію відправлення
                 Destination = destination,
                 Path = path
             };
 
             _activeTrains.Add(train);
-            Debug.WriteLine($"Потяг створений і доданий до активних. Шлях має {path.Count} сегментів.");
+            Debug.WriteLine($"Створено потяг {station.Name} -> {destination.Name}");
         }
         protected override void Draw(GameTime gameTime)
         {
@@ -260,7 +252,13 @@ namespace RiskyRails
                 Vector2 origin = Vector2.Zero;
                 Color tint = Color.White;
 
-                if (track is SwitchTrack switchTrack)
+                if (track is Station)
+                {
+                    texture = _stationTexture;
+                    origin = new Vector2(texture.Width / 2, texture.Height / 2);
+                    tint = Color.White;
+                }
+                else if(track is SwitchTrack switchTrack)
                 {
                     //текстури колій + сірий відтінок
                     texture = GetTextureForTrackType(switchTrack.Type);
@@ -300,8 +298,14 @@ namespace RiskyRails
             }
 
             //малювання поїздів
-            foreach (var train in _activeTrains)
+            foreach (var train in _activeTrains.ToList())
             {
+                train.Update(gameTime);
+                if (!train.IsActive)
+                {
+                    train.Dispose(); // Вивільнення ресурсів
+                    _activeTrains.Remove(train);
+                }
                 var isoPos = IsometricConverter.GridToIso(train.GridPosition);
                 var origin = new Vector2(_tileTexture.Width / 2, _tileTexture.Height / 2);
 

@@ -19,6 +19,7 @@ namespace RiskyRails.GameCode.Entities.Trains
         private float _pathUpdateTimer;
         private const float PathUpdateInterval = 2.0f;
         private readonly RailwayManager _railwayManager;
+        public Station DepartureStation { get; set; }
 
         public RegularTrain(RailwayManager railwayManager)
         {
@@ -28,6 +29,25 @@ namespace RiskyRails.GameCode.Entities.Trains
 
         public override void Update(GameTime gameTime)
         {
+            if (IsStoppedBySignal)
+            {
+                WaitingTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                //чекати 5 секунд перед переплануванням маршруту
+                if (WaitingTime > 5.0f)
+                {
+                    UpdatePath();
+                    WaitingTime = 0;
+                    IsStoppedBySignal = false;
+                    Speed = 0.3f;
+                }
+                return;
+            }
+            if (CurrentTrack.Signal != null && !CurrentTrack.Signal.IsGreen)
+            {
+                HandleSignal(CurrentTrack.Signal);
+                return;
+            }
             if (!CurrentTrack.CanPassThrough(this))
             {
                 IsActive = false;
@@ -118,7 +138,8 @@ namespace RiskyRails.GameCode.Entities.Trains
                 //зупинка на червоний сигнал
                 Speed = 0;
                 Path.Clear();
-                IsActive = false;
+                IsStoppedBySignal = true;
+                StoppedSignal = signal;
             }
         }
     }
