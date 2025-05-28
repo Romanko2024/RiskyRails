@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using RiskyRails.GameCode.Effects;
 using RiskyRails.GameCode.Entities;
 using RiskyRails.GameCode.Entities.Trains;
 using RiskyRails.GameCode.Managers;
@@ -38,7 +39,8 @@ namespace RiskyRails
         private Texture2D _tileCurveNW;
         private Texture2D _stationTexture;
         private Texture2D _damagedTexture;
-
+        private Texture2D _explosionTexture;
+        private List<ExplosionEffect> _explosions = new();
         private MouseState _previousMouseState;
         private double _lastToggleTime;
         private const double ClickDelayMs = 300;
@@ -57,7 +59,6 @@ namespace RiskyRails
                 _railwayManager = new RailwayManager();
                 _railwayManager.Initialize();
 
-                _collisionManager = new CollisionManager();
                 if (_railwayManager.CurrentLevel == null)
                     throw new InvalidOperationException("Рівень не завантажено!");
                 base.Initialize();
@@ -84,7 +85,8 @@ namespace RiskyRails
             _tileSignalY = Content.Load<Texture2D>("StraightY_Signal");
             _stationTexture = Content.Load<Texture2D>("station");
             _damagedTexture = Content.Load<Texture2D>("damaged_track");
-
+            _explosionTexture = Content.Load<Texture2D>("explosion");
+            _collisionManager = new CollisionManager(_explosionTexture);
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
         private Dictionary<Station, double> _lastSpawnTimes = new();
@@ -99,7 +101,7 @@ namespace RiskyRails
 
             //перевірка зіткнень
             _collisionManager.CheckCollisions(_activeTrains);
-
+            _collisionManager.Update(gameTime);
             //спавн нових потягів
             double currentTime = gameTime.TotalGameTime.TotalSeconds;
             foreach (var station in _railwayManager.CurrentLevel.Stations)
@@ -249,7 +251,7 @@ namespace RiskyRails
                 blendState: BlendState.AlphaBlend,
                 samplerState: SamplerState.PointClamp
             );
-
+            _collisionManager.Draw(_spriteBatch, _camera.Position);
             // малювання колій
             foreach (var track in _railwayManager.CurrentLevel.Tracks)
             {
