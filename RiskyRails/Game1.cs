@@ -163,7 +163,16 @@ namespace RiskyRails
                     _activeTrains.Add(new RepairTrain { CurrentTrack = station });
                 }
             }
+            if (Keyboard.GetState().IsKeyDown(Keys.P))
+            {
+                var stationB = _railwayManager.CurrentLevel.Stations.First(s => s.Name == "B");
+                var stationC = _railwayManager.CurrentLevel.Stations.First(s => s.Name == "C");
 
+                var path = _railwayManager.FindPath(stationB, stationC);
+                Debug.WriteLine(path != null
+                    ? $"Шлях B->C знайдено! Сегментів: {path.Count}"
+                    : "Шлях B->C не знайдено!");
+            }
             // правий клік - перемикання стрілок/сигналів
             if (mouseState.RightButton == ButtonState.Pressed &&
                 _previousMouseState.RightButton == ButtonState.Released)
@@ -177,7 +186,8 @@ namespace RiskyRails
                     if (switchTrack != null)
                     {
                         switchTrack.Toggle();
-                        _railwayManager.CurrentLevel.ConnectAllSegments();
+                        _railwayManager.CurrentLevel.ConnectSwitchNeighbors(switchTrack);
+
                         Debug.WriteLine($"Переключено стрілку на {gridPos}");
                     }
                     else
@@ -202,22 +212,35 @@ namespace RiskyRails
         private void SpawnTrainFromStation(Station station)
         {
             var otherStations = _railwayManager.CurrentLevel.Stations
-                .Where(s => s != station)
+                .Where(s => s != station && s != null)
                 .ToList();
 
-            if (otherStations.Count == 0) return;
+            if (otherStations.Count == 0)
+            {
+                Debug.WriteLine($"Немає інших станцій для спавну з {station.Name}");
+                return;
+            }
 
             var destination = otherStations[new Random().Next(otherStations.Count)];
+            Debug.WriteLine($"Спавн потяга з {station.Name} до {destination.Name}");
+
             var path = _railwayManager.FindPath(station, destination);
+
+            if (path == null || path.Count == 0)
+            {
+                Debug.WriteLine($"Шлях не знайдено! Потяг не створений.");
+                return;
+            }
 
             var train = new RegularTrain(_railwayManager)
             {
                 CurrentTrack = station,
                 Destination = destination,
-                Path = path ?? new Queue<TrackSegment>()
+                Path = path
             };
 
             _activeTrains.Add(train);
+            Debug.WriteLine($"Потяг створений і доданий до активних. Шлях має {path.Count} сегментів.");
         }
         protected override void Draw(GameTime gameTime)
         {

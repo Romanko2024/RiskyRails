@@ -33,7 +33,8 @@ namespace RiskyRails.GameCode.Managers
             AddStation(stationB);
             AddStation(stationC);
             AddStation(stationD);
-            //від верх до правої
+
+            //від A до B
             for (int x = 6; x < 10; x++)
             {
                 AddTrack(new TrackSegment
@@ -64,7 +65,7 @@ namespace RiskyRails.GameCode.Managers
                     Type = TrackType.StraightX
                 });
             }
-            //кишеня від верх до прав
+            //кишеня від A до B
             AddCurve(new Vector2(10, 6),
                 TrackType.CurveNE);
             AddSignalSegment(new Vector2(11, 6), TrackType.StraightX_Signal);
@@ -74,7 +75,7 @@ namespace RiskyRails.GameCode.Managers
             AddSwitch(new Vector2(12, 6),
                 TrackType.CurveSE,
                 TrackType.CurveSW);
-            //від кишеня до лівої
+            //від кишеня до C
             for (int y = 7; y < 10; y++)
             {
                 AddTrack(new TrackSegment
@@ -272,7 +273,47 @@ namespace RiskyRails.GameCode.Managers
         {
             Tracks.Add(track);
         }
+        public void ConnectSwitchNeighbors(SwitchTrack switchTrack)
+        {
+            switchTrack.ConnectedSegments.Clear();
 
+            foreach (var direction in switchTrack.GetConnectionPoints())
+            {
+                Vector2 neighborPos = switchTrack.GridPosition + direction;
+                TrackSegment neighbor = Tracks.FirstOrDefault(t =>
+                    t.GridPosition == neighborPos);
+
+                if (neighbor != null &&
+                    switchTrack.CanConnectTo(neighbor, direction) &&
+                    neighbor.CanConnectTo(switchTrack, -direction))
+                {
+                    switchTrack.ConnectTo(neighbor);
+                }
+            }
+
+            foreach (var neighbor in Tracks)
+            {
+                Vector2 direction = neighbor.GridPosition - switchTrack.GridPosition;
+                if (direction.Length() > 1.5f) continue; // Тільки сусідні сегменти
+
+                if (neighbor.ConnectedSegments.Contains(switchTrack))
+                {
+                    if (!switchTrack.GetConnectionPoints().Contains(direction))
+                    {
+                        neighbor.ConnectedSegments.Remove(switchTrack);
+                    }
+                }
+                else
+                {
+                    if (switchTrack.GetConnectionPoints().Contains(direction) &&
+                        switchTrack.CanConnectTo(neighbor, direction) &&
+                        neighbor.CanConnectTo(switchTrack, -direction))
+                    {
+                        neighbor.ConnectedSegments.Add(switchTrack);
+                    }
+                }
+            }
+        }
         private void ConnectTracks(TrackSegment a, TrackSegment b)
         {
             a.ConnectedSegments.Add(b);

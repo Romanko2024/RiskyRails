@@ -61,10 +61,16 @@ namespace RiskyRails.GameCode.Entities.Trains
 
                 //перевірка коректності з'єднання
                 //перевірка стрілки
-                if (CurrentTrack is SwitchTrack switchTrack && !switchTrack.ConnectedSegments.Contains(targetTrack))
+                if (CurrentTrack is SwitchTrack switchTrack)
                 {
-                    Speed = 0;
-                    return;
+                    Vector2 direction = targetTrack.GridPosition - switchTrack.GridPosition;
+
+                    if (!switchTrack.GetConnectionPoints().Contains(direction))
+                    {
+                        UpdatePath();
+                        _pathUpdateTimer = 0;
+                        return;
+                    }
                 }
 
                 //перевірка з'єднання

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using RiskyRails.GameCode.Managers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -56,6 +57,11 @@ namespace RiskyRails.GameCode.Entities
         {
             var reverseDir = -direction;
             bool canConnect = other.GetConnectionPoints().Contains(reverseDir);
+            if (this is Station)
+            {
+                // Станція приймає з'єднання з будь-якого напрямку
+                return true;
+            }
 
             Debug.WriteLine($"CanConnectTo: {GridPosition} -> {other.GridPosition} | " +
                             $"Direction: {direction} | Reverse: {reverseDir} | Result: {canConnect}");
@@ -65,7 +71,10 @@ namespace RiskyRails.GameCode.Entities
         // Методи
         public bool CanPassThrough(Train train)
         {
-            // перевірка можливості проїзду
+            // Для станцій завжди дозволяємо проїзд
+            if (this is Station) return true;
+
+            // Для звичайних колій
             return !IsDamaged && (Signal?.IsGreen ?? true);
         }
 
