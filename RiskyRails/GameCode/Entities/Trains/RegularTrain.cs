@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using static System.Collections.Specialized.BitVector32;
 using RiskyRails.GameCode.Entities;
 using RiskyRails.GameCode.Managers;
+using System.Diagnostics;
+using static RiskyRails.GameCode.Entities.TrackSegment;
 namespace RiskyRails.GameCode.Entities.Trains
 {
     /// <summary>
@@ -19,6 +21,10 @@ namespace RiskyRails.GameCode.Entities.Trains
         private float _pathUpdateTimer;
         private const float PathUpdateInterval = 2.0f;
         private readonly RailwayManager _railwayManager;
+        private int _rerouteAttempts = 0;
+        private const int MaxRerouteAttempts = 3;
+        private SwitchTrack _currentSwitch = null;
+        private TrackType _lastSwitchState;
         public Station DepartureStation { get; set; }
 
         public RegularTrain(RailwayManager railwayManager)
@@ -33,10 +39,10 @@ namespace RiskyRails.GameCode.Entities.Trains
             {
                 WaitingTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-                //чекати 5 секунд перед переплануванням маршруту
-                if (WaitingTime > 5.0f)
+                //чекати 3 секунди перед переплануванням маршруту
+                if (WaitingTime > 3.0f)
                 {
-                    UpdatePath();
+                    TryFindNewPath();
                     WaitingTime = 0;
                     IsStoppedBySignal = false;
                     Speed = 0.3f;
@@ -58,27 +64,52 @@ namespace RiskyRails.GameCode.Entities.Trains
             _pathUpdateTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
             if (_pathUpdateTimer >= PathUpdateInterval)
             {
-                UpdatePath();
+                TryFindNewPath();
                 _pathUpdateTimer = 0;
             }
+
 
             //обробка відсутності шляху
             if (Path.Count == 0)
             {
-                var availableTracks = CurrentTrack.ConnectedSegments
-                    .Where(t => t.CanPassThrough(this))
-                    .ToList();
+                if (!IsStoppedBySignal)
+                {
+                    TryFindNewPath();
+                }
 
-                Path = availableTracks.Count > 0
-                    ? new Queue<TrackSegment>(new[] { availableTracks[new Random().Next(availableTracks.Count)] })
-                    : new Queue<TrackSegment>();
+                if (Path.Count == 0)
+                {
+                    Speed = 0;
+                    return;
+                }
             }
 
             //
             if (Path.Count > 0)
             {
                 var targetTrack = Path.Peek();
-
+                //перевірка зміни стану стрілки
+                if (CurrentTrack is SwitchTrack currentSwitch)
+                {
+                    //якщо стрілка змінила стан
+                    if (_currentSwitch == null || _currentSwitch != currentSwitch)
+                    {
+                        _currentSwitch = currentSwitch;
+                        _lastSwitchState = currentSwitch.Type;
+                    }
+                    else if (_currentSwitch.Type != _lastSwitchState)
+                    {
+                        Debug.WriteLine($"Стрілка змінила положення! Шукаємо новий шлях...");
+                        TryFindNewPath();
+                        _lastSwitchState = _currentSwitch.Type;
+                        _pathUpdateTimer = 0;
+                        return;
+                    }
+                }
+                else
+                {
+                    _currentSwitch = null;
+                }
                 //перевірка коректності з'єднання
                 //перевірка стрілки
                 if (CurrentTrack is SwitchTrack switchTrack)
@@ -118,7 +149,58 @@ namespace RiskyRails.GameCode.Entities.Trains
                 IsActive = false;
             }
         }
+        internal void TryFindNewPath(bool forceReroute = false)
+        {
+            if (forceReroute)
+            {
+                _rerouteAttempts = 0;
+            }
 
+            UpdatePath();
+            if (Path.Count > 0) return;
+
+            var availableStations = _railwayManager.CurrentLevel.Stations
+                .Where(s => s != DepartureStation)
+                .OrderBy(s => Vector2.Distance(CurrentTrack.GridPosition, s.GridPosition))
+                .ToList();
+
+            foreach (var station in availableStations)
+            {
+                Destination = station;
+                UpdatePath();
+                if (Path.Count > 0)
+                {
+                    Debug.WriteLine($"Потяг перенаправлено до {station.Name}");
+                    return;
+                }
+            }
+
+            if (Speed == 0 && CurrentTrack is SwitchTrack switchTrack)
+            {
+                if (_currentSwitch == null)
+                {
+                    _currentSwitch = switchTrack;
+                    _lastSwitchState = switchTrack.Type;
+                }
+                else if (_currentSwitch.Type != _lastSwitchState)
+                {
+                    Debug.WriteLine($"Потяг стоїть на зміненій стрілці! Шукаємо новий шлях...");
+                    TryFindNewPath(true);
+                    _lastSwitchState = _currentSwitch.Type;
+                }
+            }
+            //якщо новий маршрут не знайдено
+            if (_rerouteAttempts < MaxRerouteAttempts)
+            {
+                _rerouteAttempts++;
+                Debug.WriteLine($"Спроба {_rerouteAttempts}/{MaxRerouteAttempts} знайти маршрут не вдалася");
+            }
+            else
+            {
+                Debug.WriteLine($"Маршрут не знайдено. Потяг зупинено.");
+                IsActive = false;
+            }
+        }
         private void UpdatePath()
         {
             if (CurrentTrack is Station currentStation && Destination != null)
@@ -135,6 +217,7 @@ namespace RiskyRails.GameCode.Entities.Trains
         {
             if (!signal.IsGreen)
             {
+                _currentSwitch = null;
                 //зупинка на червоний сигнал
                 Speed = 0;
                 Path.Clear();

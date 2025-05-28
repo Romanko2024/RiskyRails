@@ -230,7 +230,10 @@ namespace RiskyRails
                 Destination = destination,
                 Path = path
             };
-
+            if (path == null || path.Count == 0)
+            {
+                train.TryFindNewPath();
+            }
             _activeTrains.Add(train);
             Debug.WriteLine($"Створено потяг {station.Name} -> {destination.Name}");
         }
