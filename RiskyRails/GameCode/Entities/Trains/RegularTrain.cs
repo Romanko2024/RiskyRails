@@ -203,9 +203,9 @@ namespace RiskyRails.GameCode.Entities.Trains
         }
         private void UpdatePath()
         {
-            if (CurrentTrack is Station currentStation && Destination != null)
+            if (CurrentTrack != null && Destination != null)
             {
-                var newPath = _railwayManager.FindPath(currentStation, Destination);
+                var newPath = _railwayManager.FindPath(CurrentTrack, Destination);
                 if (newPath != null && newPath.Count > 0)
                 {
                     Path = newPath;

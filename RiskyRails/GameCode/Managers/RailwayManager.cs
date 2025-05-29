@@ -31,9 +31,8 @@ namespace RiskyRails.GameCode.Managers
             }
         }
 
-        public Queue<TrackSegment> FindPath(Station start, Station end)
+        public Queue<TrackSegment> FindPath(TrackSegment start, TrackSegment end)
         {
-            Debug.WriteLine($"Шукаємо шлях від {start.Name} до {end.Name}...");
 
             var visited = new Dictionary<TrackSegment, TrackSegment>();
             var queue = new Queue<TrackSegment>();
@@ -41,7 +40,11 @@ namespace RiskyRails.GameCode.Managers
             visited[start] = null;
 
             bool pathFound = false;
-
+            if (start == null || end == null || CurrentLevel == null)
+            {
+                Debug.WriteLine("Помилка: невизначений сегмент або рівень");
+                return new Queue<TrackSegment>();
+            }
             while (queue.Count > 0)
             {
                 var current = queue.Dequeue();
@@ -75,7 +78,6 @@ namespace RiskyRails.GameCode.Managers
 
             if (!pathFound)
             {
-                Debug.WriteLine($"Шлях від {start.Name} до {end.Name} не знайдено!");
                 return null;
             }
 
@@ -89,8 +91,6 @@ namespace RiskyRails.GameCode.Managers
             }
 
             var result = new Queue<TrackSegment>(path);
-
-            Debug.WriteLine($"Знайдено шлях від {start.Name} до {end.Name}: {result.Count} сегментів");
             return result;
         }
         //ConnectTracks не потрібний тк логіка з'єднання в класі Level

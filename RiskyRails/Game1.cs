@@ -145,6 +145,7 @@ namespace RiskyRails
                 (int)MathF.Round(gridPos.X),
                 (int)MathF.Round(gridPos.Y)
             );
+            //виклик рем потягу
             if (mouseState.LeftButton == ButtonState.Pressed &&
         _previousMouseState.LeftButton == ButtonState.Released)
             {
@@ -153,7 +154,12 @@ namespace RiskyRails
 
                 if (track is Station station)
                 {
-                    _activeTrains.Add(new RepairTrain { CurrentTrack = station });
+                    var repairTrain = new RepairTrain(_railwayManager)
+                    {
+                        CurrentTrack = station,
+                        GridPosition = station.GridPosition
+                    };
+                    _activeTrains.Add(repairTrain);
                 }
             }
             if (Keyboard.GetState().IsKeyDown(Keys.P))

@@ -13,11 +13,23 @@ namespace RiskyRails.GameCode.Entities
     public abstract class Train
     {
         // властивості
-        public Vector2 GridPosition { get; protected set; }  // позиція на грід-сітці
-        public TrackSegment CurrentTrack { get; set; }       // поточний сегмент колії
+        public Vector2 GridPosition { get; set; }  // позиція на грід-сітці
+        public TrackSegment CurrentTrack
+        {
+            get => _currentTrack;
+            set
+            {
+                _currentTrack = value;
+                if (value != null)
+                {
+                    GridPosition = value.GridPosition;
+                }
+            }
+        }
+        private TrackSegment _currentTrack;       // поточний сегмент колії
         public float Speed { get; protected set; } = 0.5f;   // швидкість руху (тайлів/секунду)
         public bool IsActive { get; protected set; } = true; // чи активний поїзд
-        public Queue<TrackSegment> Path { get; set; } = new();    // шлях руху
+        public Queue<TrackSegment> Path { get; set; } = new Queue<TrackSegment>();     // шлях руху
         public Vector2 TrackGridPosition => new Vector2(
         (int)Math.Floor(GridPosition.X),
         (int)Math.Floor(GridPosition.Y)
