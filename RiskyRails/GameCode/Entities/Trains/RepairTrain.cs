@@ -15,6 +15,8 @@ namespace RiskyRails.GameCode.Entities.Trains
     /// </summary>
     public class RepairTrain : Train, IRepairable
     {
+        private float _progress;
+        private TrackSegment _targetTrack;
         private readonly RailwayManager _railwayManager;
         private TrackSegment _currentTarget;
         private bool _isGoingToStation;
@@ -24,6 +26,7 @@ namespace RiskyRails.GameCode.Entities.Trains
         {
             _railwayManager = railwayManager;
             Speed = 0.4f;
+            _progress = 0f;
         }
 
         public void Repair(TrackSegment track)
@@ -40,12 +43,10 @@ namespace RiskyRails.GameCode.Entities.Trains
 
         public override void Update(GameTime gameTime)
         {
-            if (CurrentTrack == null)
-                return;
+            if (CurrentTrack == null) return;
+            if (IsRepairing) return;
 
-            if (IsRepairing)
-                return;
-
+            // Обробка зупинки через сигнал
             if (IsStoppedBySignal)
             {
                 if (StoppedSignal?.IsGreen == true)
@@ -56,7 +57,7 @@ namespace RiskyRails.GameCode.Entities.Trains
                 return;
             }
 
-            //ремонт поточного сегмента
+            // Ремонт поточного сегмента
             if (CurrentTrack.IsDamaged)
             {
                 Repair(CurrentTrack);
@@ -64,23 +65,39 @@ namespace RiskyRails.GameCode.Entities.Trains
                 return;
             }
 
-            if (Path == null)
-            {
-                Path = new Queue<TrackSegment>();
-            }
-
-            if (Path.Count == 0 || (_currentTarget != null && !_currentTarget.IsDamaged && _currentTarget != CurrentTrack))
+            // Якщо немає цільового сегмента, шукаємо нову ціль
+            if (_targetTrack == null && (Path == null || Path.Count == 0))
             {
                 FindNextTarget();
             }
 
-            if (Path != null && Path.Count > 0)
+            // Якщо є шлях, рухаємося по ньому
+            if (Path != null && Path.Count > 0 && _targetTrack == null)
             {
-                base.MoveToNextTrack();
+                _targetTrack = Path.Dequeue();
+                _progress = 0f;
             }
-            else
+
+            // Плавний рух до цільового сегмента
+            if (_targetTrack != null)
             {
-                FindNextTarget();
+                _progress += Speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                GridPosition = Vector2.Lerp(CurrentTrack.GridPosition, _targetTrack.GridPosition, _progress);
+
+                if (_progress >= 1.0f)
+                {
+                    CurrentTrack = _targetTrack;
+                    GridPosition = CurrentTrack.GridPosition;
+                    _targetTrack = null;
+                    _progress = 0f;
+
+                    // Перевірка на пошкодження нового сегмента
+                    if (CurrentTrack.IsDamaged)
+                    {
+                        Repair(CurrentTrack);
+                        Path?.Clear();
+                    }
+                }
             }
         }
 
@@ -100,7 +117,10 @@ namespace RiskyRails.GameCode.Entities.Trains
                 _isGoingToStation = false;
 
                 if (Path == null) Path = new Queue<TrackSegment>();
-                Path = _railwayManager.FindPath(CurrentTrack, _currentTarget) ?? new Queue<TrackSegment>();
+                Path = _railwayManager.FindPath(CurrentTrack, _currentTarget, this);
+        Debug.WriteLine(Path != null 
+            ? $"Знайдено шлях до пошкодженого сегмента: {_currentTarget.GridPosition}" 
+            : "Шлях до пошкодженого сегмента не знайдено!");
             }
             else
             {
@@ -121,6 +141,13 @@ namespace RiskyRails.GameCode.Entities.Trains
                     _currentTarget = null;
                     Path?.Clear();
                 }
+            }
+            if (_currentTarget != null)
+            {
+                Path = _railwayManager.FindPath(CurrentTrack, _currentTarget);
+                Debug.WriteLine(Path != null
+                    ? $"Found path with {Path.Count} segments"
+                    : "Path not found!");
             }
         }
 

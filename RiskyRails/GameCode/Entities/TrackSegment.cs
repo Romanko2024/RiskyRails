@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using RiskyRails.GameCode.Entities.Trains;
 using RiskyRails.GameCode.Managers;
 using System;
 using System.Collections.Generic;
@@ -71,6 +72,8 @@ namespace RiskyRails.GameCode.Entities
         // Методи
         public bool CanPassThrough(Train train)
         {
+            if (train is RepairTrain) return true;
+
             // Для станцій завжди дозволяємо проїзд
             if (this is Station) return true;
 

@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using RiskyRails.GameCode.Entities;
+using RiskyRails.GameCode.Entities.Trains;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace RiskyRails.GameCode.Managers
 {
@@ -31,7 +33,7 @@ namespace RiskyRails.GameCode.Managers
             }
         }
 
-        public Queue<TrackSegment> FindPath(TrackSegment start, TrackSegment end)
+        public Queue<TrackSegment> FindPath(TrackSegment start, TrackSegment end, Train train = null)
         {
 
             var visited = new Dictionary<TrackSegment, TrackSegment>();
@@ -57,6 +59,7 @@ namespace RiskyRails.GameCode.Managers
 
                 foreach (var neighbor in current.ConnectedSegments.Where(t => t.CanPassThrough(null)))
                 {
+                    if (!neighbor.CanPassThrough(null)) continue;
                     if (current is SwitchTrack switchTrack)
                     {
                         Vector2 dirToNeighbor = neighbor.GridPosition - current.GridPosition;
