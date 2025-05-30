@@ -162,16 +162,6 @@ namespace RiskyRails
                     _activeTrains.Add(repairTrain);
                 }
             }
-            if (Keyboard.GetState().IsKeyDown(Keys.P))
-            {
-                var stationB = _railwayManager.CurrentLevel.Stations.First(s => s.Name == "B");
-                var stationC = _railwayManager.CurrentLevel.Stations.First(s => s.Name == "C");
-
-                var path = _railwayManager.FindPath(stationB, stationC);
-                Debug.WriteLine(path != null
-                    ? $"Шлях B->C знайдено! Сегментів: {path.Count}"
-                    : "Шлях B->C не знайдено!");
-            }
             // правий клік - перемикання стрілок/сигналів
             if (mouseState.RightButton == ButtonState.Pressed &&
                 _previousMouseState.RightButton == ButtonState.Released)

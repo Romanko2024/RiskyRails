@@ -20,6 +20,8 @@ namespace RiskyRails.GameCode.Entities.Trains
         private readonly RailwayManager _railwayManager;
         private TrackSegment _currentTarget;
         private bool _isGoingToStation;
+        private float _pathUpdateTimer;
+        private const float PathUpdateInterval = 1.0f;
         public bool IsRepairing { get; private set; }
 
         public RepairTrain(RailwayManager railwayManager)
@@ -43,6 +45,13 @@ namespace RiskyRails.GameCode.Entities.Trains
 
         public override void Update(GameTime gameTime)
         {
+            _pathUpdateTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            bool shouldFindPath = _pathUpdateTimer >= PathUpdateInterval;
+            if (shouldFindPath)
+            {
+                _pathUpdateTimer = 0;
+            }
             if (CurrentTrack == null) return;
             if (IsRepairing) return;
 
@@ -68,7 +77,10 @@ namespace RiskyRails.GameCode.Entities.Trains
             // Якщо немає цільового сегмента, шукаємо нову ціль
             if (_targetTrack == null && (Path == null || Path.Count == 0))
             {
-                FindNextTarget();
+                if (shouldFindPath && _targetTrack == null && (Path == null || Path.Count == 0))
+                {
+                    FindNextTarget();
+                }
             }
 
             // Якщо є шлях, рухаємося по ньому
@@ -82,7 +94,10 @@ namespace RiskyRails.GameCode.Entities.Trains
             if (_targetTrack != null)
             {
                 _progress += Speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-                GridPosition = Vector2.Lerp(CurrentTrack.GridPosition, _targetTrack.GridPosition, _progress);
+                if (CurrentTrack != null && _targetTrack != null)
+                {
+                    GridPosition = Vector2.Lerp(CurrentTrack.GridPosition, _targetTrack.GridPosition, _progress);
+                }
 
                 if (_progress >= 1.0f)
                 {
@@ -96,6 +111,14 @@ namespace RiskyRails.GameCode.Entities.Trains
                     {
                         Repair(CurrentTrack);
                         Path?.Clear();
+                    }
+                    else
+                    {
+                        //якщо не пошкоджений, шукаємо наступну ціль
+                        if (shouldFindPath && _targetTrack == null && (Path == null || Path.Count == 0))
+                        {
+                            FindNextTarget();
+                        }
                     }
                 }
             }
@@ -141,13 +164,6 @@ namespace RiskyRails.GameCode.Entities.Trains
                     _currentTarget = null;
                     Path?.Clear();
                 }
-            }
-            if (_currentTarget != null)
-            {
-                Path = _railwayManager.FindPath(CurrentTrack, _currentTarget);
-                Debug.WriteLine(Path != null
-                    ? $"Found path with {Path.Count} segments"
-                    : "Path not found!");
             }
         }
 

@@ -72,7 +72,11 @@ namespace RiskyRails.GameCode.Entities
         // Методи
         public bool CanPassThrough(Train train)
         {
-            if (train is RepairTrain) return true;
+            if (train is RepairTrain)
+            {
+                Debug.WriteLine($"{GridPosition}: Allowed for RepairTrain");
+                return true;
+            }
 
             // Для станцій завжди дозволяємо проїзд
             if (this is Station) return true;

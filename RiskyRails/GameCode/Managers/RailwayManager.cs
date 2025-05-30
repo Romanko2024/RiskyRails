@@ -35,6 +35,8 @@ namespace RiskyRails.GameCode.Managers
 
         public Queue<TrackSegment> FindPath(TrackSegment start, TrackSegment end, Train train = null)
         {
+            Debug.WriteLine($"=== ПОЧАТОК ПОШУКУ ШЛЯХУ ===");
+            Debug.WriteLine($"Від: {start?.GridPosition} До: {end?.GridPosition} Для: {train?.GetType().Name}");
 
             var visited = new Dictionary<TrackSegment, TrackSegment>();
             var queue = new Queue<TrackSegment>();
@@ -42,30 +44,37 @@ namespace RiskyRails.GameCode.Managers
             visited[start] = null;
 
             bool pathFound = false;
-            if (start == null || end == null || CurrentLevel == null)
-            {
-                Debug.WriteLine("Помилка: невизначений сегмент або рівень");
-                return new Queue<TrackSegment>();
-            }
+
             while (queue.Count > 0)
             {
                 var current = queue.Dequeue();
+                Debug.WriteLine($"Поточний сегмент: {current.GridPosition}");
 
                 if (current == end)
                 {
+                    Debug.WriteLine($"Досягнуто ціль: {end.GridPosition}");
                     pathFound = true;
                     break;
                 }
 
-                foreach (var neighbor in current.ConnectedSegments.Where(t => t.CanPassThrough(null)))
+                foreach (var neighbor in current.ConnectedSegments)
                 {
-                    if (!neighbor.CanPassThrough(null)) continue;
+                    Debug.WriteLine($" Перевірка сусіда: {neighbor.GridPosition}");
+
+                    //перевірка можливості проходу
+                    if (!neighbor.CanPassThrough(train))
+                    {
+                        Debug.WriteLine($"  - Не можна пройти через {neighbor.GridPosition}");
+                        continue;
+                    }
+
+                    //перевірка стрілок
                     if (current is SwitchTrack switchTrack)
                     {
                         Vector2 dirToNeighbor = neighbor.GridPosition - current.GridPosition;
                         if (!switchTrack.GetConnectionPoints().Contains(dirToNeighbor))
                         {
-                            Debug.WriteLine($"Пропускаємо сусіда {neighbor.GridPosition} через напрямок стрілки");
+                            Debug.WriteLine($"  - Пропущено через напрямок стрілки");
                             continue;
                         }
                     }
@@ -74,13 +83,15 @@ namespace RiskyRails.GameCode.Managers
                     {
                         visited[neighbor] = current;
                         queue.Enqueue(neighbor);
-                        Debug.WriteLine($"Додано в шлях: {neighbor.GridPosition}");
+                        Debug.WriteLine($"  - Додано до черги: {neighbor.GridPosition}");
                     }
                 }
             }
 
             if (!pathFound)
             {
+                Debug.WriteLine($"ШЛЯХ НЕ ЗНАЙДЕНО! Кінцева точка: {end.GridPosition}");
+                Debug.WriteLine($"Відвідані сегменти: {string.Join(", ", visited.Keys.Select(v => v.GridPosition))}");
                 return null;
             }
 
@@ -94,6 +105,9 @@ namespace RiskyRails.GameCode.Managers
             }
 
             var result = new Queue<TrackSegment>(path);
+            Debug.WriteLine($"Знайдено шлях: {string.Join(" -> ", result.Select(r => r.GridPosition))}");
+            Debug.WriteLine($"=== КІНЕЦЬ ПОШУКУ ШЛЯХУ ===");
+
             return result;
         }
         //ConnectTracks не потрібний тк логіка з'єднання в класі Level
