@@ -52,7 +52,7 @@ namespace RiskyRails
         }
         private double _lastDrunkenSpawnTime;
         private const double DrunkenSpawnInterval = 15.0;
-        private const float DrunkenSpawnChance = 0.3f;
+        private const float DrunkenSpawnChance = 1f;
         protected override void Initialize()
         {
             try

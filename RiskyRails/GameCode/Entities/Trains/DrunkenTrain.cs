@@ -22,14 +22,17 @@ namespace RiskyRails.GameCode.Entities.Trains
         private readonly RailwayManager _railwayManager;
         private float _directionChangeTimer;
         private const float DirectionChangeInterval = 1.0f;
+        private float _stationTimer;
+        private const float StationStayTime = 2.0f;
 
         public DrunkenTrain(RailwayManager railwayManager)
         {
             _railwayManager = railwayManager;
-            Speed = 0.7f;
+            Speed = 0.5f;
             _direction = new Vector2(1, 0);
             _progress = 0f;
             _directionChangeTimer = 0f;
+            _stationTimer = 0f;
         }
 
         public override void Update(GameTime gameTime)
@@ -41,9 +44,18 @@ namespace RiskyRails.GameCode.Entities.Trains
             //чи прибули на станцію
             if (CurrentTrack is Station)
             {
-                IsActive = false;
-                Debug.WriteLine("П'яний потяг прибув на станцію і зник");
-                return;
+                _stationTimer += elapsed;
+
+                if (_stationTimer >= StationStayTime)
+                {
+                    IsActive = false;
+                    Debug.WriteLine("П'яний потяг прибув на станцію і зник");
+                    return;
+                }
+            }
+            else
+            {
+                _stationTimer = 0f;
             }
 
             //чи може проїхати поточний сегмент
