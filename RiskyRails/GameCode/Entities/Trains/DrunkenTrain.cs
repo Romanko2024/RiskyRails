@@ -37,6 +37,7 @@ namespace RiskyRails.GameCode.Entities.Trains
 
         public override void Update(GameTime gameTime)
         {
+            base.Update(gameTime);
             if (!IsActive) return;
 
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;

@@ -35,6 +35,7 @@ namespace RiskyRails.GameCode.Entities.Trains
 
         public override void Update(GameTime gameTime)
         {
+            base.Update(gameTime);
             if (IsStoppedBySignal)
             {
                 WaitingTime += (float)gameTime.ElapsedGameTime.TotalSeconds;

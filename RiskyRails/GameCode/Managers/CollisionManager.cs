@@ -22,25 +22,26 @@ namespace RiskyRails.GameCode.Managers
         }
         public void CheckCollisions(List<Train> trains)
         {
-            foreach (var train1 in trains)
+            for (int i = 0; i < trains.Count; i++)
             {
-                foreach (var train2 in trains)
+                for (int j = i + 1; j < trains.Count; j++)
                 {
-                    if (train1 == train2 || train1 is RepairTrain || train2 is RepairTrain)
+                    var train1 = trains[i];
+                    var train2 = trains[j];
+
+                    if (train1.IsImmune || train2.IsImmune)
                         continue;
 
                     var distance = Vector2.Distance(train1.GridPosition, train2.GridPosition);
-                    if (distance < 0.3f) //якщо поїзди дуже близько
+                    if (distance < 0.3f)
                     {
                         if (train1.IsActive && train2.IsActive)
                         {
-                            //ефект вибуху
                             Vector2 explosionPos = (train1.GridPosition + train2.GridPosition) / 2f;
                             _explosions.Add(new ExplosionEffect(_explosionTexture, explosionPos));
 
                             train1.HandleCollision();
                             train2.HandleCollision();
-                            train1.CurrentTrack?.MarkAsDamaged();
                         }
                     }
                 }

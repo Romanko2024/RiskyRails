@@ -168,7 +168,8 @@ namespace RiskyRails
                     var repairTrain = new RepairTrain(_railwayManager, station)
                     {
                         CurrentTrack = station,
-                        GridPosition = station.GridPosition
+                        GridPosition = station.GridPosition,
+                        IsImmune = true
                     };
                     _activeTrains.Add(repairTrain);
                 }
@@ -239,7 +240,8 @@ namespace RiskyRails
                 CurrentTrack = station,
                 DepartureStation = station, // Встановлюємо станцію відправлення
                 Destination = destination,
-                Path = path
+                Path = path,
+                IsImmune = true
             };
             if (path == null || path.Count == 0)
             {
@@ -259,7 +261,8 @@ namespace RiskyRails
             var drunkenTrain = new DrunkenTrain(_railwayManager)
             {
                 CurrentTrack = station,
-                GridPosition = station.GridPosition
+                GridPosition = station.GridPosition,
+                IsImmune = true
             };
             _activeTrains.Add(drunkenTrain);
             Debug.WriteLine($"Створено п'яний потяг на станції {station.Name}");

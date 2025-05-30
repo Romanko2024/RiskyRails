@@ -48,6 +48,10 @@ namespace RiskyRails.GameCode.Entities.Trains
 
         public override void Update(GameTime gameTime)
         {
+            base.Update(gameTime);
+
+            if (IsImmune || IsRepairing)
+                return;
             _pathUpdateTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
             bool shouldFindPath = _pathUpdateTimer >= PathUpdateInterval;
             if (shouldFindPath)

@@ -171,48 +171,6 @@ namespace RiskyRails.GameCode.Managers
             AddTrack(switchTrack);
         }
 
-        private void CreateRailLine(Vector2 start, Vector2 end, Direction dir, TrackSegment.TrackType type)
-        {
-            var step = dir switch
-            {
-                Direction.East => new Vector2(1, 0),
-                Direction.West => new Vector2(-1, 0),
-                Direction.North => new Vector2(0, -1),
-                Direction.South => new Vector2(0, 1),
-                _ => Vector2.Zero
-            };
-            switch (dir)
-            {
-                case Direction.East:
-                    if (start.Y != end.Y)
-                        throw new ArgumentException("неправильні координати прямої");
-                    break;
-                case Direction.North:
-                    if (start.X != end.X)
-                        throw new ArgumentException("неправильні координати прямої");
-                    break;
-                case Direction.South:
-                    if (start.X != end.X)
-                        throw new ArgumentException("неправильні координати прямої");
-                    break;
-                case Direction.West:
-                    if (start.Y != end.Y)
-                        throw new ArgumentException("неправильні координати прямої");
-                    break;
-            }
-            var current = start;
-            while (current != end)
-            {
-                var segment = new TrackSegment
-                {
-                    GridPosition = current,
-                    Type = type
-                };
-                AddTrack(segment);
-                current += step;
-            }
-        }
-
         private void AddCurve(Vector2 position, TrackSegment.TrackType type)
         {
             var curve = new TrackSegment
@@ -313,11 +271,6 @@ namespace RiskyRails.GameCode.Managers
                     }
                 }
             }
-        }
-        private void ConnectTracks(TrackSegment a, TrackSegment b)
-        {
-            a.ConnectedSegments.Add(b);
-            b.ConnectedSegments.Add(a);
         }
     }
 }

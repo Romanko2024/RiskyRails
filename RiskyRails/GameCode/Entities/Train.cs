@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,8 +38,24 @@ namespace RiskyRails.GameCode.Entities
         public bool IsStoppedBySignal { get; protected set; }
         public Signal StoppedSignal { get; protected set; }
         public float WaitingTime { get; protected set; }
+        public bool IsImmune { get; set; } = true;
+        private float _immuneTimer;
+        private const float ImmuneDuration = 0.5f;
+
         // абстрактні методи
-        public abstract void Update(GameTime gameTime);      // оновлення стану
+        public virtual void Update(GameTime gameTime)
+        {
+            float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (IsImmune)
+            {
+                _immuneTimer += elapsed;
+                if (_immuneTimer >= ImmuneDuration)
+                {
+                    IsImmune = false;
+                    Debug.WriteLine($"Імунітет потяга вимкнено: {GetType().Name}");
+                }
+            }
+        }
         public abstract void HandleSignal(Signal signal);    // реакція на сигнал
 
         // віртуальні методи
