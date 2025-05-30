@@ -154,7 +154,7 @@ namespace RiskyRails
 
                 if (track is Station station)
                 {
-                    var repairTrain = new RepairTrain(_railwayManager)
+                    var repairTrain = new RepairTrain(_railwayManager, station)
                     {
                         CurrentTrack = station,
                         GridPosition = station.GridPosition

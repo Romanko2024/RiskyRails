@@ -23,12 +23,15 @@ namespace RiskyRails.GameCode.Entities.Trains
         private float _pathUpdateTimer;
         private const float PathUpdateInterval = 1.0f;
         public bool IsRepairing { get; private set; }
-
-        public RepairTrain(RailwayManager railwayManager)
+        private readonly Station _homeStation;
+        private float _idleTime;
+        public RepairTrain(RailwayManager railwayManager, Station homeStation)
         {
             _railwayManager = railwayManager;
             Speed = 0.4f;
             _progress = 0f;
+            _homeStation = homeStation;
+            _idleTime = 0;
         }
 
         public void Repair(TrackSegment track)
@@ -46,12 +49,12 @@ namespace RiskyRails.GameCode.Entities.Trains
         public override void Update(GameTime gameTime)
         {
             _pathUpdateTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-
             bool shouldFindPath = _pathUpdateTimer >= PathUpdateInterval;
             if (shouldFindPath)
             {
                 _pathUpdateTimer = 0;
             }
+
             if (CurrentTrack == null) return;
             if (IsRepairing) return;
 
@@ -77,7 +80,7 @@ namespace RiskyRails.GameCode.Entities.Trains
             // Якщо немає цільового сегмента, шукаємо нову ціль
             if (_targetTrack == null && (Path == null || Path.Count == 0))
             {
-                if (shouldFindPath && _targetTrack == null && (Path == null || Path.Count == 0))
+                if (shouldFindPath)
                 {
                     FindNextTarget();
                 }
@@ -106,29 +109,37 @@ namespace RiskyRails.GameCode.Entities.Trains
                     _targetTrack = null;
                     _progress = 0f;
 
-                    // Перевірка на пошкодження нового сегмента
                     if (CurrentTrack.IsDamaged)
                     {
                         Repair(CurrentTrack);
                         Path?.Clear();
                     }
+                    else if (CurrentTrack == _homeStation)
+                    {
+                        Path?.Clear();
+                        _currentTarget = null;
+                        Debug.WriteLine("Ремонтний потяг повернувся на базу");
+                    }
                     else
                     {
-                        //якщо не пошкоджений, шукаємо наступну ціль
-                        if (shouldFindPath && _targetTrack == null && (Path == null || Path.Count == 0))
-                        {
-                            FindNextTarget();
-                        }
+                        FindNextTarget();
                     }
+                }
+            }
+            else if (CurrentTrack == _homeStation && _currentTarget == null)
+            {
+                _idleTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (_idleTime > 1.0f)
+                {
+                    IsActive = false;
+                    Debug.WriteLine("Ремонтний потяг деактивовано після очікування");
                 }
             }
         }
 
         private void FindNextTarget()
         {
-            if (_railwayManager?.CurrentLevel?.Tracks == null)
-                return;
-
+            // Пошук пошкоджених сегментів
             var damagedTracks = _railwayManager.CurrentLevel.Tracks
                 .Where(t => t != null && t.IsDamaged && t != CurrentTrack)
                 .OrderBy(t => Vector2.Distance(CurrentTrack.GridPosition, t.GridPosition))
@@ -138,32 +149,19 @@ namespace RiskyRails.GameCode.Entities.Trains
             {
                 _currentTarget = damagedTracks[0];
                 _isGoingToStation = false;
-
-                if (Path == null) Path = new Queue<TrackSegment>();
                 Path = _railwayManager.FindPath(CurrentTrack, _currentTarget, this);
-        Debug.WriteLine(Path != null 
-            ? $"Знайдено шлях до пошкодженого сегмента: {_currentTarget.GridPosition}" 
-            : "Шлях до пошкодженого сегмента не знайдено!");
+            }
+            else if (_homeStation != null && _homeStation != CurrentTrack)
+            {
+                // Повертаємось на базову станцію
+                _currentTarget = _homeStation;
+                _isGoingToStation = true;
+                Path = _railwayManager.FindPath(CurrentTrack, _homeStation, this);
             }
             else
             {
-                var stations = _railwayManager.CurrentLevel.Stations?
-                    .Where(s => s != null && s != CurrentTrack)
-                    .OrderBy(s => Vector2.Distance(CurrentTrack.GridPosition, s.GridPosition))
-                    .ToList();
-
-                if (stations?.Count > 0)
-                {
-                    _currentTarget = stations[0];
-                    _isGoingToStation = true;
-                    if (Path == null) Path = new Queue<TrackSegment>();
-                    Path = _railwayManager.FindPath(CurrentTrack, _currentTarget) ?? new Queue<TrackSegment>();
-                }
-                else
-                {
-                    _currentTarget = null;
-                    Path?.Clear();
-                }
+                _currentTarget = null;
+                Path?.Clear();
             }
         }
 
