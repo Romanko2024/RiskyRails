@@ -50,7 +50,9 @@ namespace RiskyRails
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
         }
-
+        private double _lastDrunkenSpawnTime;
+        private const double DrunkenSpawnInterval = 15.0;
+        private const float DrunkenSpawnChance = 0.3f;
         protected override void Initialize()
         {
             try
@@ -58,7 +60,7 @@ namespace RiskyRails
                 _camera = new IsometricCamera(GraphicsDevice.Viewport);
                 _railwayManager = new RailwayManager();
                 _railwayManager.Initialize();
-
+                _lastDrunkenSpawnTime = 0;
                 if (_railwayManager.CurrentLevel == null)
                     throw new InvalidOperationException("Рівень не завантажено!");
                 base.Initialize();
@@ -118,7 +120,16 @@ namespace RiskyRails
                     _lastSpawnTimes[station] = currentTime;
                 }
             }
+            //спавн п'яного потягу
+            if (currentTime - _lastDrunkenSpawnTime > DrunkenSpawnInterval)
+            {
+                _lastDrunkenSpawnTime = currentTime;
 
+                if (new Random().NextDouble() < DrunkenSpawnChance)
+                {
+                    SpawnDrunkenTrain();
+                }
+            }
 
             //рух камери стрілками
             var keyboardState = Keyboard.GetState();
@@ -236,6 +247,22 @@ namespace RiskyRails
             }
             _activeTrains.Add(train);
             Debug.WriteLine($"Створено потяг {station.Name} -> {destination.Name}");
+        }
+        private void SpawnDrunkenTrain()
+        {
+            if (_railwayManager.CurrentLevel.Stations.Count == 0)
+                return;
+
+            int index = new Random().Next(_railwayManager.CurrentLevel.Stations.Count);
+            Station station = _railwayManager.CurrentLevel.Stations[index];
+
+            var drunkenTrain = new DrunkenTrain(_railwayManager)
+            {
+                CurrentTrack = station,
+                GridPosition = station.GridPosition
+            };
+            _activeTrains.Add(drunkenTrain);
+            Debug.WriteLine($"Створено п'яний потяг на станції {station.Name}");
         }
         protected override void Draw(GameTime gameTime)
         {
