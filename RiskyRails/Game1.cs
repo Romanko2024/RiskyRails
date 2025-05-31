@@ -44,6 +44,8 @@ namespace RiskyRails
         private MouseState _previousMouseState;
         private double _lastToggleTime;
         private const double ClickDelayMs = 300;
+
+        private Dictionary<string, Texture2D> _trainTextures = new();
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -90,6 +92,12 @@ namespace RiskyRails
             _explosionTexture = Content.Load<Texture2D>("explosion");
             _collisionManager = new CollisionManager(_explosionTexture);
             _spriteBatch = new SpriteBatch(GraphicsDevice);
+            string[] directions = { "N", "S", "E", "W" };
+            foreach (var dir in directions)
+            {
+                _trainTextures.Add($"train_{dir}1", Content.Load<Texture2D>($"train_{dir}"));
+                _trainTextures.Add($"train_{dir}2", Content.Load<Texture2D>($"train_{dir}2"));
+            }
         }
         private Dictionary<Station, double> _lastSpawnTimes = new();
         protected override void Update(GameTime gameTime)
@@ -339,42 +347,56 @@ namespace RiskyRails
             foreach (var train in _activeTrains.ToList())
             {
                 train.Update(gameTime);
+                string direction = train.DirectionName;
+                int frame = train.AnimationFrame + 1;
+                string textureKey = $"train_{direction}{frame}";
                 if (!train.IsActive)
                 {
                     train.Dispose(); // Вивільнення ресурсів
                     _activeTrains.Remove(train);
                 }
-                var isoPos = IsometricConverter.GridToIso(train.GridPosition);
-                var origin = new Vector2(_tileTexture.Width / 2, _tileTexture.Height / 2);
-
-                float trainDepth = IsometricConverter.CalculateDepth(
-                    train.TrackGridPosition,
-                    offset: 0.01f
-                );
-
-                Color trainColor = train switch
+                if (_trainTextures.TryGetValue(textureKey, out Texture2D texture))
                 {
-                    RegularTrain => Color.Blue,
-                    DrunkenTrain => Color.Red,
-                    RepairTrain => Color.Green,
-                    _ => Color.White
-                };
+                    Vector2 isoPos = IsometricConverter.GridToIso(train.GridPosition);
+                    Vector2 origin = new Vector2(texture.Width / 2, texture.Height / 2);
+                    float depth = IsometricConverter.CalculateDepth(train.TrackGridPosition, 0.01f);
 
-                _spriteBatch.Draw(
-                    _tileTexture,
-                    isoPos,
-                    null,
-                    trainColor,
-                    0f,
-                    origin,
-                    0.7f,
-                    SpriteEffects.None,
-                    trainDepth
-                );
+                    //ОФСЕТ
+                    Vector2 offset = Vector2.Zero;
+                    switch (direction)
+                    {
+                        case "N": offset = new Vector2(-3, -10); break;
+                        case "S": offset = new Vector2(-3, -10); break;
+                        case "E": offset = new Vector2(0, -10); break;
+                        case "W": offset = new Vector2(0, -10); break;
+                    }
+
+                    _spriteBatch.Draw(
+                        texture,
+                        isoPos + offset,
+                        null,
+                        GetTrainColor(train),
+                        0f,
+                        origin,
+                        0.7f,
+                        SpriteEffects.None,
+                        depth
+                    );
+                }
             }
             _spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+        private Color GetTrainColor(Train train)
+        {
+            return train switch
+            {
+                RegularTrain => Color.Blue,
+                DrunkenTrain => Color.Red,
+                RepairTrain => Color.Green,
+                _ => Color.White
+            };
         }
 
         //метод для отримання текстури за типом колії

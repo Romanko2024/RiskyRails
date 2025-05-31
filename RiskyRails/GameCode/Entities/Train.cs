@@ -42,6 +42,12 @@ namespace RiskyRails.GameCode.Entities
         private float _immuneTimer;
         private const float ImmuneDuration = 0.5f;
 
+        public Vector2 LastPosition { get; set; }
+        public Vector2 DirectionVector { get; protected set; } = Vector2.UnitX;
+        public int AnimationFrame { get; protected set; }
+        private float _animationTimer;
+        private const float AnimationSpeed = 0.2f;
+
         // абстрактні методи
         public virtual void Update(GameTime gameTime)
         {
@@ -55,7 +61,33 @@ namespace RiskyRails.GameCode.Entities
                     Debug.WriteLine($"Імунітет потяга вимкнено: {GetType().Name}");
                 }
             }
+            _animationTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (_animationTimer >= AnimationSpeed)
+            {
+                AnimationFrame = (AnimationFrame + 1) % 2; //чергуєсо 0 і 1
+                _animationTimer = 0;
+            }
+
+            // напрямок руху
+            if (GridPosition != LastPosition)
+            {
+                DirectionVector = Vector2.Normalize(GridPosition - LastPosition);
+            }
+            LastPosition = GridPosition;
         }
+
+        public string DirectionName
+        {
+            get
+            {
+                if (Math.Abs(DirectionVector.X) > Math.Abs(DirectionVector.Y))
+                {
+                    return DirectionVector.X > 0 ? "E" : "W";
+                }
+                return DirectionVector.Y > 0 ? "S" : "N";
+            }
+        }
+
         public abstract void HandleSignal(Signal signal);    // реакція на сигнал
 
         // віртуальні методи
