@@ -51,8 +51,6 @@ namespace RiskyRails.GameCode.Entities.Trains
                 IsImmune = false;
             }
 
-            UpdateCurrentTrack();
-
             // Перевірка чи потяг зійшов з колій
             if (CurrentTrack == null && !IsImmune)
             {
@@ -147,25 +145,6 @@ namespace RiskyRails.GameCode.Entities.Trains
                     );
                     _direction.Normalize();
                 }
-            }
-        }
-
-        private void UpdateCurrentTrack()
-        {
-            if (_railwayManager?.CurrentLevel?.Tracks == null)
-                return;
-
-            var nearestTrack = _railwayManager.CurrentLevel.Tracks
-                .OrderBy(t => Vector2.Distance(GridPosition, t.GridPosition))
-                .FirstOrDefault();
-
-            if (nearestTrack != null && Vector2.Distance(GridPosition, nearestTrack.GridPosition) < 0.5f)
-            {
-                CurrentTrack = nearestTrack;
-            }
-            else
-            {
-                CurrentTrack = null;
             }
         }
 
