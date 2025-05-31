@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using RiskyRails.GameCode.Entities;
 
 namespace RiskyRails.GameCode.Entities.Trains
@@ -21,24 +19,23 @@ namespace RiskyRails.GameCode.Entities.Trains
         private float _progress;
         private readonly RailwayManager _railwayManager;
         private float _directionChangeTimer;
-        private const float DirectionChangeInterval = 1.0f;
+        private const float DirectionChangeInterval = 2.0f;
         private float _stationTimer;
-        private const float StationStayTime = 2.0f;
+        private const float StationStayTime = 5.0f;
+        private float _spawnTimer = 0f;
+        private const float SpawnImmunityTime = 0.5f;
 
         public DrunkenTrain(RailwayManager railwayManager)
         {
             _railwayManager = railwayManager;
             Speed = 0.5f;
-            Vector2[] possibleDirections = {
-                new Vector2(1, 0),
-                new Vector2(-1, 0),
-                new Vector2(0, 1),
-                new Vector2(0, -1)
-            };
-            _direction = possibleDirections[_random.Next(possibleDirections.Length)];
+
+            //початковий напрямок буде встановлений під час першого Update
+            _direction = Vector2.Zero;
             _progress = 0f;
             _directionChangeTimer = 0f;
             _stationTimer = 0f;
+            IsImmune = true;
         }
 
         public override void Update(GameTime gameTime)
@@ -48,11 +45,25 @@ namespace RiskyRails.GameCode.Entities.Trains
 
             float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            //чи прибули на станцію
-            if (CurrentTrack is Station)
+            _spawnTimer += elapsed;
+            if (_spawnTimer >= SpawnImmunityTime)
+            {
+                IsImmune = false;
+            }
+
+            UpdateCurrentTrack();
+
+            // Перевірка чи потяг зійшов з колій
+            if (CurrentTrack == null && !IsImmune)
+            {
+                IsActive = false;
+                Debug.WriteLine("П'яний потяг зійшов з колій");
+                return;
+            }
+
+            if (!IsImmune && CurrentTrack is Station)
             {
                 _stationTimer += elapsed;
-
                 if (_stationTimer >= StationStayTime)
                 {
                     IsActive = false;
@@ -65,8 +76,7 @@ namespace RiskyRails.GameCode.Entities.Trains
                 _stationTimer = 0f;
             }
 
-            //чи може проїхати поточний сегмент
-            if (CurrentTrack != null && !CurrentTrack.CanPassThrough(this))
+            if (CurrentTrack != null && !CurrentTrack.CanPassThrough(this) && !IsImmune)
             {
                 CurrentTrack.MarkAsDamaged();
                 IsActive = false;
@@ -79,17 +89,23 @@ namespace RiskyRails.GameCode.Entities.Trains
             if (_directionChangeTimer > DirectionChangeInterval)
             {
                 _directionChangeTimer = 0;
-                if (_random.NextDouble() < 0.1)
+                if (_random.NextDouble() < 0.05)
                 {
-                    _direction = new Vector2(
+                    Vector2 newDirection = new Vector2(
                         (float)(_random.NextDouble() * 2 - 1),
                         (float)(_random.NextDouble() * 2 - 1)
                     );
-                    _direction.Normalize();
+                    newDirection.Normalize();
+
+                    float angle = MathHelper.ToRadians(45);
+                    float dot = Vector2.Dot(_direction, newDirection);
+                    if (dot > Math.Cos(angle))
+                    {
+                        _direction = newDirection;
+                    }
                 }
             }
 
-            // Рух
             if (_targetTrack != null)
             {
                 _progress += Speed * elapsed;
@@ -105,21 +121,31 @@ namespace RiskyRails.GameCode.Entities.Trains
             }
             else
             {
-                GridPosition += _direction * Speed * elapsed;
+                //немає цільового сегмента - знаходимо новий
+                var possibleDirections = GetPossibleDirections();
 
-                if (CurrentTrack != null)
+                if (possibleDirections.Count > 0)
                 {
-                    Vector2 direction = _direction;
-                    direction.Normalize();
+                    //рандом вибір напрямку з доступних
+                    _direction = possibleDirections[_random.Next(possibleDirections.Count)];
+                    _direction.Normalize();
 
                     var nextSegment = _railwayManager.CurrentLevel.Tracks
-                        .FirstOrDefault(t => t.GridPosition == CurrentTrack.GridPosition + direction);
+                        .FirstOrDefault(t => t.GridPosition == CurrentTrack.GridPosition + _direction);
 
                     if (nextSegment != null && CurrentTrack.ConnectedSegments.Contains(nextSegment))
                     {
                         _targetTrack = nextSegment;
                         _progress = 0f;
                     }
+                }
+                else
+                {
+                    _direction = new Vector2(
+                        (float)(_random.NextDouble() * 2 - 1),
+                        (float)(_random.NextDouble() * 2 - 1)
+                    );
+                    _direction.Normalize();
                 }
             }
         }
@@ -137,6 +163,32 @@ namespace RiskyRails.GameCode.Entities.Trains
             {
                 CurrentTrack = nearestTrack;
             }
+            else
+            {
+                CurrentTrack = null;
+            }
+        }
+
+        private List<Vector2> GetPossibleDirections()
+        {
+            var directions = new List<Vector2>();
+
+            if (CurrentTrack != null)
+            {
+                foreach (var dir in CurrentTrack.GetConnectionPoints())
+                {
+                    var neighborPos = CurrentTrack.GridPosition + dir;
+                    var neighbor = _railwayManager.CurrentLevel.Tracks
+                        .FirstOrDefault(t => t.GridPosition == neighborPos);
+
+                    if (neighbor != null && CurrentTrack.ConnectedSegments.Contains(neighbor))
+                    {
+                        directions.Add(dir);
+                    }
+                }
+            }
+
+            return directions;
         }
 
         public override void HandleSignal(Signal signal)
