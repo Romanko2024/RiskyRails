@@ -19,9 +19,17 @@ namespace RiskyRails.GameCode.Managers
         public void Initialize()
         {
             //створення рівнів
+            Levels.Clear();
+
             var level1 = new Level();
-            level1.GenerateTestLevel();
+            level1.GenerateLevel(0);
+
+            var level2 = new Level();
+            level2.GenerateLevel(1);
+
             Levels.Add(level1);
+            Levels.Add(level2);
+
             LoadLevel(0);
         }
 
@@ -30,6 +38,7 @@ namespace RiskyRails.GameCode.Managers
             if (levelIndex >= 0 && levelIndex < Levels.Count)
             {
                 CurrentLevel = Levels[levelIndex];
+                Debug.WriteLine($"Завантажено рівень {levelIndex + 1}");
             }
         }
 

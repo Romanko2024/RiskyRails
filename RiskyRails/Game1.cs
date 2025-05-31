@@ -45,6 +45,8 @@ namespace RiskyRails
         private double _lastToggleTime;
         private const double ClickDelayMs = 300;
 
+        private int _currentLevelIndex = 0;
+
         private Dictionary<string, Texture2D> _trainTextures = new();
         public Game1()
         {
@@ -102,6 +104,22 @@ namespace RiskyRails
         private Dictionary<Station, double> _lastSpawnTimes = new();
         protected override void Update(GameTime gameTime)
         {
+            var keyboardState = Keyboard.GetState();
+
+            //перемикання рівнів
+            if (keyboardState.IsKeyDown(Keys.D1) && _currentLevelIndex != 0)
+            {
+                _railwayManager.LoadLevel(0);
+                _currentLevelIndex = 0;
+                ResetGameState();
+            }
+            if (keyboardState.IsKeyDown(Keys.D2) && _currentLevelIndex != 1)
+            {
+                _railwayManager.LoadLevel(1);
+                _currentLevelIndex = 1;
+                ResetGameState();
+            }
+
             //оновлення потягів
             foreach (var train in _activeTrains.ToList())
             {
@@ -140,7 +158,6 @@ namespace RiskyRails
             }
 
             //рух камери стрілками
-            var keyboardState = Keyboard.GetState();
             var moveSpeed = 5.0f;
             var newPosition = _camera.Position;
 
@@ -397,6 +414,14 @@ namespace RiskyRails
                 RepairTrain => new Color(85, 194, 89),
                 _ => Color.White
             };
+        }
+
+        private void ResetGameState()
+        {
+            _activeTrains.Clear();
+            _lastSpawnTimes.Clear();
+            _lastDrunkenSpawnTime = 0;
+            Debug.WriteLine("Стан гри скинуто для нового рівня");
         }
 
         //метод для отримання текстури за типом колії
