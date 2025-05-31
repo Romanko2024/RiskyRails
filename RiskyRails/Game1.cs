@@ -277,7 +277,7 @@ namespace RiskyRails
         }
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(new Color(108, 156, 82));
 
             _spriteBatch.Begin(
                 transformMatrix: _camera.TransformMatrix,
@@ -392,9 +392,9 @@ namespace RiskyRails
         {
             return train switch
             {
-                RegularTrain => Color.Blue,
-                DrunkenTrain => Color.Red,
-                RepairTrain => Color.Green,
+                RegularTrain => new Color(66, 135, 245),
+                DrunkenTrain => new Color(217, 79, 61),
+                RepairTrain => new Color(85, 194, 89),
                 _ => Color.White
             };
         }

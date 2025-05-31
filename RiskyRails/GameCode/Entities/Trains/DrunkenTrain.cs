@@ -29,7 +29,13 @@ namespace RiskyRails.GameCode.Entities.Trains
         {
             _railwayManager = railwayManager;
             Speed = 0.5f;
-            _direction = new Vector2(1, 0);
+            Vector2[] possibleDirections = {
+                new Vector2(1, 0),
+                new Vector2(-1, 0),
+                new Vector2(0, 1),
+                new Vector2(0, -1)
+            };
+            _direction = possibleDirections[_random.Next(possibleDirections.Length)];
             _progress = 0f;
             _directionChangeTimer = 0f;
             _stationTimer = 0f;
@@ -82,8 +88,6 @@ namespace RiskyRails.GameCode.Entities.Trains
                     _direction.Normalize();
                 }
             }
-
-            UpdateCurrentTrack();
 
             // Рух
             if (_targetTrack != null)
