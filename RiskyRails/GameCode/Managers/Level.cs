@@ -183,25 +183,59 @@ namespace RiskyRails.GameCode.Managers
             }
 
             //
-            AddCurve(new Vector2(8, 3), TrackType.CurveSE);
-            AddCurve(new Vector2(9, 3), TrackType.CurveSW);
-            AddCurve(new Vector2(8, 12), TrackType.CurveNE);
-            AddCurve(new Vector2(9, 12), TrackType.CurveNW);
+            AddSwitch(new Vector2(8, 3),
+                TrackType.CurveSE,
+                TrackType.StraightX);
+            AddSwitch(new Vector2(9, 3),
+                TrackType.CurveSW,
+                TrackType.StraightX);
+            AddCurve(new Vector2(10, 11),
+                TrackType.CurveSW);
 
+            for (int y = 4; y < 11; y++)
+            {
+                AddTrack(new TrackSegment
+                {
+                    GridPosition = new Vector2(9, y),
+                    Type = TrackType.StraightY
+                });
+            }
+            AddCurve(new Vector2(9, 11),
+                TrackType.CurveNE);
             //
             for (int x = 4; x < 15; x++)
             {
-                if (x == 8 || x == 9) continue;
+                if (x == 8 || x == 9 || x == 10) continue;
                 AddTrack(new TrackSegment
                 {
                     GridPosition = new Vector2(x, 12),
                     Type = TrackType.StraightX
                 });
             }
+            AddCurve(new Vector2(10, 12),
+                TrackType.CurveNE);
+            AddSignalSegment(new Vector2(15, 4), TrackType.StraightY_Signal);
+            for (int y = 5; y < 12; y++)
+            {
+                AddTrack(new TrackSegment
+                {
+                    GridPosition = new Vector2(15, y),
+                    Type = TrackType.StraightY
+                });
+            }
+            AddCurve(new Vector2(15, 12),
+                TrackType.CurveNW);
 
-            //
-            AddSignalSegment(new Vector2(11, 3), TrackType.StraightX_Signal);
-            AddSignalSegment(new Vector2(13, 12), TrackType.StraightX_Signal);
+            for (int y = 4; y < 12; y++)
+            {
+                AddTrack(new TrackSegment
+                {
+                    GridPosition = new Vector2(3, y),
+                    Type = TrackType.StraightY
+                });
+            }
+            AddCurve(new Vector2(3, 12),
+                TrackType.CurveNE);
 
             ConnectAllSegments();
             ValidateLevel();
