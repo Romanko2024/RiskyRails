@@ -24,25 +24,24 @@ namespace RiskyRails.GameCode.Managers
         {
             for (int i = 0; i < trains.Count; i++)
             {
+                var train1 = trains[i];
+                if (train1.IsImmune || !train1.IsActive)
+                    continue;
+
                 for (int j = i + 1; j < trains.Count; j++)
                 {
-                    var train1 = trains[i];
                     var train2 = trains[j];
-
-                    if (train1.IsImmune || train2.IsImmune)
+                    if (train2.IsImmune || !train2.IsActive)
                         continue;
 
-                    var distance = Vector2.Distance(train1.GridPosition, train2.GridPosition);
+                    float distance = Vector2.Distance(train1.GridPosition, train2.GridPosition);
                     if (distance < 0.3f)
                     {
-                        if (train1.IsActive && train2.IsActive)
-                        {
-                            Vector2 explosionPos = (train1.GridPosition + train2.GridPosition) / 2f;
-                            _explosions.Add(new ExplosionEffect(_explosionTexture, explosionPos));
+                        Vector2 explosionPos = (train1.GridPosition + train2.GridPosition) / 2f;
+                        _explosions.Add(new ExplosionEffect(_explosionTexture, explosionPos));
 
-                            train1.HandleCollision();
-                            train2.HandleCollision();
-                        }
+                        train1.HandleCollision();
+                        train2.HandleCollision();
                     }
                 }
             }
